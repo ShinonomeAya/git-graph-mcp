@@ -12,10 +12,7 @@ This repository includes a `.mcp.json` that starts the server with:
     "git-graph-mcp": {
       "type": "stdio",
       "command": "node",
-      "args": ["./bin/git-graph-mcp.js", "mcp"],
-      "env": {
-        "GIT_GRAPH_MCP_REPO": "${CLAUDE_PROJECT_DIR:-.}"
-      }
+      "args": ["./bin/git-graph-mcp.js", "mcp"]
     }
   }
 }
