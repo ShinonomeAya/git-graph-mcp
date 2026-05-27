@@ -1,0 +1,20 @@
+{
+  "name": "git-graph-mcp",
+  "version": "0.1.0",
+  "description": "Terminal Git graph for AI coding tools, with AI-readable commit selection state.",
+  "type": "commonjs",
+  "bin": {
+    "git-graph-mcp": "./bin/git-graph-mcp.js"
+  },
+  "scripts": {
+    "start": "node ./bin/git-graph-mcp.js",
+    "graph": "node ./bin/git-graph-mcp.js graph",
+    "compare-selected": "node ./bin/git-graph-mcp.js compare-selected",
+    "selected": "node ./bin/git-graph-mcp.js selected",
+    "status": "node ./bin/git-graph-mcp.js status"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
