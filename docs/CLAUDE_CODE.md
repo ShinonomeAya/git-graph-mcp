@@ -9,23 +9,23 @@ This repository includes a `.mcp.json` that starts the server with:
 ```json
 {
   "mcpServers": {
-    "git-graph-mcp": {
+    "git-graph": {
       "type": "stdio",
-      "command": "node",
-      "args": ["./bin/git-graph-mcp.js", "mcp"]
+      "command": "F:\\WeChatwork\\微信web开发者工具\\node.exe",
+      "args": ["F:\\sokusai\\My project\\git-graph-mcp\\bin\\git-graph-mcp.js", "mcp"]
     }
   }
 }
 ```
 
-When Claude Code opens this repository, it should prompt you to trust the project-scoped MCP server. After approval, run `/mcp` inside Claude Code and check that `git-graph-mcp` is connected.
+When Claude Code opens this repository, it should prompt you to trust the project-scoped MCP server. After approval, run `/mcp` inside Claude Code and check that `git-graph` is connected.
 
 ## Option B: Add It To Another Project
 
 From the project where you want Claude Code to use the graph tools:
 
 ```powershell
-claude mcp add --transport stdio --scope local git-graph-mcp -- node "F:\sokusai\My project\git-graph-mcp\bin\git-graph-mcp.js" mcp
+claude mcp add --transport stdio --scope local git-graph -- "F:\WeChatwork\微信web开发者工具\node.exe" "F:\sokusai\My project\git-graph-mcp\bin\git-graph-mcp.js" mcp
 ```
 
 Use `--scope user` instead of `--scope local` if you want the same server available across projects.

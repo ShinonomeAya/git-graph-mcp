@@ -2,7 +2,7 @@ const { compareWithHead, getGitContext, getGitStatus, readCommit } = require("./
 const { buildGraphRows, renderGraphAfter, renderLane } = require("./graph");
 const { readSelection, writeSelection } = require("./state");
 
-const SERVER_NAME = "git-graph-mcp";
+const SERVER_NAME = "git-graph";
 const SERVER_VERSION = "0.1.0";
 
 async function runMcpServer() {
