@@ -9,6 +9,7 @@
   "scripts": {
     "start": "node ./bin/git-graph-mcp.js",
     "graph": "node ./bin/git-graph-mcp.js graph",
+    "mcp": "node ./bin/git-graph-mcp.js mcp",
     "compare-selected": "node ./bin/git-graph-mcp.js compare-selected",
     "selected": "node ./bin/git-graph-mcp.js selected",
     "status": "node ./bin/git-graph-mcp.js status"

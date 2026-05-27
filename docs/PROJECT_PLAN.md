@@ -52,6 +52,7 @@ Planned MCP tools:
 - `git_graph(repo, limit)`: return graph rows and commit metadata.
 - `git_selected(repo)`: return current selected commit context.
 - `git_status(repo)`: return compact working tree status.
+- `git_inspect_commit(repo, commit)`: inspect and select a commit.
 - `git_compare_selected_with_head(repo)`: summarize diff from selected commit to HEAD.
 - `git_create_branch_at_selected(repo, name)`: create a branch at the selected commit.
 - `git_reset_plan(repo, mode)`: preview reset effects before execution.
@@ -74,11 +75,11 @@ Before destructive history movement, the tool should suggest creating a backup b
 
 ## Near-Term Build Order
 
-1. Add official MCP server using `@modelcontextprotocol/sdk`.
-2. Add branch and lane selection, not only commit selection.
-3. Add safe branch creation.
-4. Add reset preview.
-5. Improve TUI details panel for selected commit.
+1. Add branch and lane selection, not only commit selection.
+2. Add safe branch creation.
+3. Add reset preview.
+4. Improve TUI details panel for selected commit.
+5. Add optional SDK-backed MCP transport if dependency installation is acceptable.
 6. Package as an npm CLI.
 
 ## Open Product Questions

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "git-graph-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./bin/git-graph-mcp.js",
+        "mcp"
+      ],
+      "env": {
+        "GIT_GRAPH_MCP_REPO": "${CLAUDE_PROJECT_DIR:-.}"
+      }
+    }
+  }
+}

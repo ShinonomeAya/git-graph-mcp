@@ -1,5 +1,6 @@
 const { compareWithHead, getGitContext, getGitStatus, readCommit } = require("./git");
 const { buildGraphRows } = require("./graph");
+const { runMcpServer } = require("./mcp");
 const { runTui, renderStaticGraph } = require("./tui");
 const { readSelection, writeSelection } = require("./state");
 
@@ -7,6 +8,11 @@ async function runCli(argv) {
   const command = argv[0] && !argv[0].startsWith("-") ? argv[0] : "graph";
   const args = command === "graph" ? argv.slice(argv[0] === "graph" ? 1 : 0) : argv.slice(1);
   const repo = readOption(args, "--repo") || process.cwd();
+
+  if (command === "mcp") {
+    await runMcpServer();
+    return;
+  }
 
   if (command === "graph") {
     const limit = Number(readOption(args, "--limit") || 80);

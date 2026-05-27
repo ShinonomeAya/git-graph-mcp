@@ -99,7 +99,7 @@ function readCommit(root, hash) {
     hash,
   ]).trim();
   const commit = parseCommitRecord(record);
-  const changedFiles = git(root, ["diff-tree", "-m", "--no-commit-id", "--name-status", "-r", hash])
+  const changedFiles = git(root, ["diff-tree", "--root", "-m", "--no-commit-id", "--name-status", "-r", hash])
     .split(/\r?\n/)
     .filter(Boolean);
   const patchPreview = git(root, ["show", "--stat", "--oneline", "--decorate", "--no-renames", hash]);

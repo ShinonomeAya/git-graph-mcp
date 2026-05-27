@@ -52,6 +52,14 @@ Get compact status:
 node ./bin/git-graph-mcp.js status --repo /path/to/repo
 ```
 
+Run as a Claude Code MCP server:
+
+```bash
+node ./bin/git-graph-mcp.js mcp
+```
+
+See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
+
 ## TUI keys
 
 - `Up` / `k`: move up
@@ -69,6 +77,7 @@ Phase 2: MCP server tools:
 - `git_graph`: return commit graph JSON.
 - `git_selected`: return the user's selected commit.
 - `git_compare_selected_with_head`: return diff summary.
+- `git_inspect_commit`: inspect a commit and save it as selection.
 - `git_create_branch_at_selected`: safe branch creation.
 - `git_reset_plan`: preview soft/mixed/hard reset impact without executing.
 
