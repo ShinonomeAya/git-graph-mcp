@@ -11,7 +11,7 @@ Release 已存在且保持不变，npm 未发布。T28/T29/T31 的修复位于�
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；
 - 默认 Git 读取保持只读，reset 只生成计划，分支创建需要显式调用；
-- 当前维护分支最新技术修复提交为 `258315f`，不移动已发布的 `v0.2.0`。
+- 当前维护分支最新技术修复提交为 `849bbab`，不移动已发布的 `v0.2.0`。
 
 ## 已验证证据
 
@@ -27,8 +27,9 @@ Release 已存在且保持不变，npm 未发布。T28/T29/T31 的修复位于�
   与调用契约通过；
 - `test/integration/safe-actions.test.js`、`test/unit/actions.test.js`：分支动作在计划
   过期、脏状态、HEAD 或 ref 漂移时拒绝且不改变 refs/index/worktree；
-- GitHub Actions run `32952666371`：Windows/Ubuntu × Node 22/24 的 package install、
-  check 和官方 registry audit 全部通过；后续提交需重新取得对应 run 证据。
+- GitHub Actions run `32955420207`：Windows/Ubuntu × Node 22/24 的 package install、
+  check 和官方 registry audit 全部通过，且 checkout/setup-node 已切换到维护中的
+  action runtime。
 
 ## 放行清单（分别批准）
 

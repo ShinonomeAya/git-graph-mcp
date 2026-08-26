@@ -46,9 +46,9 @@ node --test test/integration/mcp-stdio.test.js
 | Windows | PASS | PASS |
 | Ubuntu | PASS | PASS |
 
-已完成证据：GitHub Actions run `32952666371`，四个矩阵 job 均完成 `npm run check`、
-`npm run test:package-install` 和官方 registry audit。任何后续代码提交都必须以
-对应的新 run 重新记录。
+已完成证据：GitHub Actions run `32955420207`（commit `849bbab`），四个矩阵 job 均
+完成 `npm run check`、`npm run test:package-install` 和官方 registry audit，且工作流
+使用维护中的 checkout/setup-node action runtime。
 
 ### 阶段 D：发布候选审查
 
@@ -91,7 +91,7 @@ node .\bin\git-graph-mcp.js graph --limit 8
 本机：Windows，Node.js 20.19.4（仅迁移检查），Git，npm
 阶段 A：PASS；npm test 72/72、check、clean install、official registry audit
 阶段 B：PASS；官方 MCP SDK integration
-阶段 C：PASS；GitHub Actions run 32952666371，Windows/Ubuntu × Node 22/24
+阶段 C：PASS；GitHub Actions run 32955420207，Windows/Ubuntu × Node 22/24
 阶段 D：PASS；包 allowlist、diff check、路径/秘密扫描
 阶段 E：待用户；Claude Code 实际 /mcp 页面截图和一次只读调用
 版本/tag/Release：v0.2.0 已存在且保持不变

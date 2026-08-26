@@ -897,14 +897,14 @@ create a patch release only when post-`v0.2.0` code fixes require it.
 
 **Acceptance criteria:**
 
-- [ ] Existing `v0.2.0` tag is not moved.
-- [ ] Clean artifact, package allowlist, security scan, and rollback checklist pass.
-- [ ] Release version and distribution channel are explicitly recorded.
+- [x] Existing `v0.2.0` tag is not moved.
+- [x] Clean artifact, package allowlist, security scan, and rollback checklist pass.
+- [x] Release version and distribution channel are explicitly recorded.
 
 **Verification:**
 
-- [ ] `npm pack --dry-run --json`, path/secret scan, and `git diff --check` pass.
-- [ ] Release review records the exact commit and CI run.
+- [x] `npm pack --dry-run --json`, path/secret scan, and `git diff --check` pass.
+- [x] Release review records the exact commit `849bbab` and CI run `32955420207`.
 
 **Dependencies:** T30, T31
 
@@ -942,8 +942,8 @@ technical gates pass and the user explicitly confirms the final visibility actio
 
 ## Checkpoint K: public review
 
-- [ ] T30/T32 documentation, artifact, path scan, and rollback review pass.
-- [ ] Existing `v0.2.0` remains immutable; any patch release is separately identified.
+- [x] T30/T32 documentation, artifact, path scan, and rollback review pass.
+- [x] Existing `v0.2.0` remains immutable; any patch release is separately identified.
 
 ## Checkpoint L: public launch
 

@@ -107,8 +107,8 @@ Git、选择文件或 MCP 配置。Node.js 20 在本机只作为迁移检查并�
 
 ## 已完成的外部证据
 
-- GitHub Actions run `32952666371` 已验证 Windows/Ubuntu × Node 22/24 四个矩阵，
-  提交 `9c58243` 的四个 job 均通过 `check`、clean package install 和官方 registry audit；
+- GitHub Actions run `32955420207` 已验证 Windows/Ubuntu × Node 22/24 四个矩阵，
+  提交 `849bbab` 的四个 job 均通过 `check`、clean package install 和官方 registry audit；
 
 ## 仍待人工确认
 
