@@ -38,6 +38,7 @@ See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
 | `node .\bin\git-graph-mcp.js inspect <commit>` | Inspect and save a commit selection |
 | `node .\bin\git-graph-mcp.js selected` | Read the saved selection |
 | `node .\bin\git-graph-mcp.js compare-selected` | Compare the selection with `HEAD` |
+| `node .\bin\git-graph-mcp.js doctor` | Diagnose runtime, Git, repository, MCP config, and stdio setup |
 | `node .\bin\git-graph-mcp.js mcp` | Start the stdio MCP server |
 
 Add `--repo <path>` to CLI commands when the target repository is not the
@@ -89,3 +90,9 @@ Normal execution creates no log file and MCP stdout remains protocol-only. Set
 `GIT_GRAPH_MCP_DEBUG=1` temporarily to emit concise lifecycle messages on
 stderr. The diagnostics intentionally omit repository paths, request
 arguments, patch content, and environment dumps.
+
+Run `node .\bin\git-graph-mcp.js doctor` for concise human-readable checks, or
+add `--json` for a stable machine-readable report. A missing `.mcp.json` is a
+non-blocking warning; invalid configuration, an invalid repository, or a failed
+stdio handshake is reported with a stable failure code. The command is
+read-only and never prints repository paths or configuration values.

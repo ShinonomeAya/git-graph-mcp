@@ -79,6 +79,18 @@ npm run benchmark:large
 和 file history 上传入 `timeoutMs`（1–60000）。超时统一返回 `GIT_TIMEOUT`，
 并通过后续 Git status 检查确认没有遗留阻塞进程。
 
+### 7. Doctor 诊断
+
+```powershell
+node .\bin\git-graph-mcp.js doctor
+node .\bin\git-graph-mcp.js doctor --json --repo <path>
+```
+
+诊断覆盖 Node.js、Git、仓库解析、包版本、MCP 配置和 stdio 握手。输出只含
+状态、稳定错误码和摘要，不回显仓库路径、配置值或请求内容；命令不会修改
+Git、选择文件或 MCP 配置。Node.js 20 在本机只作为迁移检查并显示
+`RUNTIME_UNSUPPORTED` 警告，正式支持版本仍为 Node.js 22+。
+
 ## 本轮结果
 
 - 全量 `npm run check`：通过，65 项测试、smoke、package allowlist 通过；

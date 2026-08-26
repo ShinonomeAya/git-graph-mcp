@@ -67,11 +67,26 @@ test("packed artifact installs cleanly and exposes CLI and MCP entrypoints", asy
         "git_graph",
         "git_status",
         "git_selected",
+        "git_context_bundle",
+        "git_search_commits",
+        "git_commit_diff",
+        "git_file_history",
+        "git_revalidate_plan",
         "git_inspect_commit",
         "git_compare_selected_with_head",
         "git_create_branch_at_selected",
         "git_reset_plan",
       ]);
+
+      const doctor = spawnSync(process.execPath, [installedBin, "doctor", "--json", "--repo", fixture.root], {
+        cwd: fixture.root,
+        encoding: "utf8",
+        windowsHide: true,
+      });
+      assert.equal(doctor.status, 0, doctor.stderr);
+      const report = JSON.parse(doctor.stdout);
+      assert.equal(report.ok, true);
+      assert.equal(report.checks.find((check) => check.name === "mcp-handshake").status, "pass");
     } finally {
       await client.close().catch(() => {});
       await transport.close().catch(() => {});

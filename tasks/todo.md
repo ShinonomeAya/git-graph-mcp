@@ -745,14 +745,14 @@ configuration, and stdio handshake without exposing secrets or changing state.
 
 **Acceptance criteria:**
 
-- [ ] `doctor` emits concise human output and optional structured JSON.
-- [ ] Checks distinguish missing runtime, invalid repo, stale config, and MCP failure.
-- [ ] Diagnostics redact paths/config values according to the existing policy.
+- [x] `doctor` emits concise human output and optional structured JSON.
+- [x] Checks distinguish missing runtime, invalid repo, stale config, and MCP failure.
+- [x] Diagnostics redact paths/config values according to the existing policy.
 
 **Verification:**
 
-- [ ] CLI fixtures cover healthy and failing environments.
-- [ ] Packaged install runs `doctor` successfully on Windows and Ubuntu.
+- [x] CLI fixtures cover healthy and failing environments.
+- [x] Packaged install runs `doctor` successfully on Windows and Ubuntu.
 
 **Dependencies:** T25
 

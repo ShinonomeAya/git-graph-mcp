@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const { execFileSync, spawnSync } = require("node:child_process");
+const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 
@@ -151,5 +152,49 @@ test("typed CLI selection resolves commit, range, and full ref without changing 
     assert.deepEqual(gitSnapshot(repo.root), before);
   } finally {
     repo.cleanup();
+  }
+});
+
+test("doctor reports a healthy setup without leaking repository or config paths", () => {
+  const repo = createTempRepo();
+  try {
+    commitFile(repo, "one.txt", "one\n", "one");
+    const result = runCli(["doctor", "--json", "--repo", repo.root], PROJECT_ROOT);
+    assert.equal(result.status, 0, result.stderr);
+    const report = JSON.parse(result.stdout);
+    assert.equal(report.schemaVersion, 1);
+    assert.equal(report.ok, true);
+    assert.ok(report.checks.some((check) => check.name === "runtime" && ["pass", "warn"].includes(check.status)));
+    assert.ok(report.checks.some((check) => check.name === "repository" && check.status === "pass"));
+    assert.ok(report.checks.some((check) => check.name === "mcp-handshake" && check.status === "pass"));
+    assert.equal(result.stdout.includes(repo.root), false);
+    assert.equal(result.stdout.includes("mcpServers"), false);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("doctor distinguishes invalid repositories and stale MCP configuration", () => {
+  const repo = createTempRepo();
+  const invalid = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "git-graph-mcp-not-repo-"));
+  const config = path.join(invalid, ".mcp.json");
+  try {
+    const invalidRepo = runCli(["doctor", "--json", "--repo", invalid], PROJECT_ROOT);
+    assert.equal(invalidRepo.status, 1);
+    const invalidReport = JSON.parse(invalidRepo.stdout);
+    assert.equal(invalidReport.ok, false);
+    assert.equal(invalidReport.checks.find((check) => check.name === "repository").code, "INVALID_REPO_PATH");
+
+    commitFile(repo, "one.txt", "one\n", "one");
+    fs.writeFileSync(config, JSON.stringify({ mcpServers: { "git-graph": { command: "python", args: [] } } }));
+    const stale = runCli(["doctor", "--json", "--repo", repo.root, "--config", config], PROJECT_ROOT);
+    assert.equal(stale.status, 1);
+    const staleReport = JSON.parse(stale.stdout);
+    assert.equal(staleReport.ok, false);
+    assert.equal(staleReport.checks.find((check) => check.name === "mcp-config").code, "MCP_CONFIG_STALE");
+    assert.equal(stale.stdout.includes(config), false);
+  } finally {
+    repo.cleanup();
+    fs.rmSync(invalid, { recursive: true, force: true });
   }
 });

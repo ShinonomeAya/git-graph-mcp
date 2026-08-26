@@ -12,17 +12,30 @@ const { buildGraphRows } = require("./graph");
 const { runMcpServer } = require("./mcp");
 const { runTui, renderStaticGraph } = require("./tui");
 const { readSelection, resolveSelection, writeSelection } = require("./state");
+const { formatDoctor, runDoctor } = require("./diagnostics");
 
 async function runCli(argv) {
   const command = argv[0] && !argv[0].startsWith("-") ? argv[0] : "graph";
   const args = command === "graph" ? argv.slice(argv[0] === "graph" ? 1 : 0) : argv.slice(1);
   const parsed = parseCommandArgs(command, args);
-  const repo = command === "mcp" ? null : resolveRepo(parsed.options.repo, {
+  const repo = command === "mcp" || command === "doctor" ? null : resolveRepo(parsed.options.repo, {
     timeoutMs: parsed.options.timeout,
   });
 
   if (command === "mcp") {
     await runMcpServer();
+    return;
+  }
+
+  if (command === "doctor") {
+    const report = await runDoctor({
+      repo: parsed.options.repo,
+      configPath: parsed.options.config,
+      timeoutMs: parsed.options.timeout,
+    });
+    if (parsed.options.json) console.log(JSON.stringify(report, null, 2));
+    else console.log(formatDoctor(report));
+    if (!report.ok) process.exitCode = 1;
     return;
   }
 
@@ -143,6 +156,7 @@ const OPTION_DEFINITIONS = {
   "compare-selected": { "--repo": "value", "--limit": "value" },
   inspect: { "--repo": "value" },
   select: { "--repo": "value" },
+  doctor: { "--repo": "value", "--config": "value", "--timeout": "value", "--json": "flag" },
   mcp: {},
 };
 

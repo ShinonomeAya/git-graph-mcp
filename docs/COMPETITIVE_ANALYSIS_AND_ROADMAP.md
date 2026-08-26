@@ -320,7 +320,7 @@ SQLite、守护进程或网络端口依赖。
 ### Phase 9：v0.5 安全产品化
 
 1. T25：统一 action plan receipt，将 repo/head/index/status 指纹绑定到动作计划（已完成，含过期、脏状态、HEAD 与 ref 移动拒绝）；
-2. T26：增加 `doctor` 命令，诊断 Node、Git、仓库、MCP 配置和客户端连接；
+2. T26：增加 `doctor` 命令，诊断 Node、Git、仓库、MCP 配置和客户端连接（已完成，含健康、无效仓库、过期配置与握手失败夹具）；
 3. T27：完善演示、能力矩阵、SECURITY/CONTRIBUTING 和条件式公开发布清单。
 
 Checkpoint：计划过期时动作拒绝；安装后五分钟内可完成 graph→select→MCP read；
