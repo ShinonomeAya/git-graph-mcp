@@ -810,14 +810,14 @@ seen in Windows Node 22 CI without masking real test failures.
 
 **Acceptance criteria:**
 
-- [ ] Temporary Git fixture cleanup retries bounded, transient Windows lock errors.
-- [ ] Cleanup preserves the original failure after retries and leaves diagnostics.
-- [ ] Search/history fixture tests pass repeatedly without changing production behavior.
+- [x] Temporary Git fixture cleanup retries bounded, transient Windows lock errors.
+- [x] Cleanup preserves the original failure after retries and leaves diagnostics.
+- [x] Search/history fixture tests pass repeatedly without changing production behavior.
 
 **Verification:**
 
-- [ ] Focused Git tests pass locally and in Windows Node 22 CI.
-- [ ] Full `npm run check` remains green.
+- [x] Focused Git tests pass locally and in Windows Node 22 CI.
+- [x] Full `npm run check` remains green.
 
 **Dependencies:** T27
 
@@ -832,14 +832,14 @@ audit required parts of every maintained-runtime matrix cell.
 
 **Acceptance criteria:**
 
-- [ ] CI runs `npm run test:package-install` on Windows/Ubuntu Node 22/24.
-- [ ] CI runs high-severity audit against `registry.npmjs.org` and fails on findings.
-- [ ] CI output identifies each matrix cell and its release-gate result.
+- [x] CI runs `npm run test:package-install` on Windows/Ubuntu Node 22/24.
+- [x] CI runs high-severity audit against `registry.npmjs.org` and fails on findings.
+- [x] CI output identifies each matrix cell and its release-gate result.
 
 **Verification:**
 
-- [ ] All four matrix cells pass the expanded workflow.
-- [ ] Local package-install and audit commands pass.
+- [x] All four matrix cells pass the expanded workflow.
+- [x] Local package-install and audit commands pass.
 
 **Dependencies:** T28
 
@@ -932,13 +932,13 @@ technical gates pass and the user explicitly confirms the final visibility actio
 
 ## Checkpoint I: deterministic public-release base
 
-- [ ] T28 focused cleanup and full local check pass.
-- [ ] No unrelated worktree changes are included.
+- [x] T28 focused cleanup and full local check pass.
+- [x] No unrelated worktree changes are included.
 
 ## Checkpoint J: maintained-runtime release gate
 
-- [ ] T29 CI gates and T31 four-cell evidence pass.
-- [ ] Clean install, audit, MCP handshake, and user path are green.
+- [x] T29 CI gates and four-cell evidence pass.
+- [x] Clean install, audit, MCP handshake, and automated user path are green; client-side evidence remains a manual gate.
 
 ## Checkpoint K: public review
 
