@@ -1,7 +1,8 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const test = require("node:test");
 
-const { commitFile, createTempRepo } = require("../helpers/git-repo");
+const { cleanupTempPath, commitFile, createTempRepo } = require("../helpers/git-repo");
 
 const {
   GitError,
@@ -13,6 +14,25 @@ const {
   resolveSelectionTarget,
   resolveRepo,
 } = require("../../src/git");
+
+test("temporary repository cleanup enables bounded Windows retry options", () => {
+  const original = fs.rmSync;
+  let options;
+  fs.rmSync = (_target, receivedOptions) => {
+    options = receivedOptions;
+  };
+  try {
+    cleanupTempPath("C:/temporary-git-graph-mcp-fixture");
+  } finally {
+    fs.rmSync = original;
+  }
+  assert.deepEqual(options, {
+    recursive: true,
+    force: true,
+    maxRetries: 8,
+    retryDelay: 100,
+  });
+});
 
 test("normalizeLimit accepts bounded integer input and rejects malformed values", () => {
   assert.equal(normalizeLimit(undefined), 80);

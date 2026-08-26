@@ -14,8 +14,22 @@ function createTempRepo() {
   return {
     root,
     runGit: (args) => runGit(root, args),
-    cleanup: () => fs.rmSync(root, { recursive: true, force: true }),
+    cleanup: () => cleanupTempPath(root),
   };
+}
+
+function cleanupTempPath(target) {
+  try {
+    fs.rmSync(target, {
+      recursive: true,
+      force: true,
+      maxRetries: 8,
+      retryDelay: 100,
+    });
+  } catch (error) {
+    error.message = `Temporary Git fixture cleanup failed after bounded retries: ${error.message}`;
+    throw error;
+  }
 }
 
 function commitFile(repo, name, content, message) {
@@ -37,5 +51,6 @@ function runGit(cwd, args) {
 
 module.exports = {
   commitFile,
+  cleanupTempPath,
   createTempRepo,
 };
