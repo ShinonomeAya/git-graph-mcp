@@ -4,7 +4,9 @@ const path = require("path");
 const { execFileSync } = require("child_process");
 
 function createTempRepo() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "git-graph-mcp-test-"));
+  const root = fs.realpathSync.native(
+    fs.mkdtempSync(path.join(os.tmpdir(), "git-graph-mcp-test-"))
+  );
   runGit(root, ["init"]);
   runGit(root, ["config", "user.name", "git-graph-mcp tests"]);
   runGit(root, ["config", "user.email", "git-graph-mcp-tests@example.invalid"]);
