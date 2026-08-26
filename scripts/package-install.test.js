@@ -49,6 +49,36 @@ test("packed artifact installs cleanly and exposes CLI and MCP entrypoints", asy
     assert.equal(graph.status, 0, graph.stderr);
     assert.match(graph.stdout, /git-graph-mcp/);
 
+    const commit = spawnSync("git", ["rev-parse", "HEAD"], {
+      cwd: fixture.root,
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(commit.status, 0, commit.stderr);
+    const commitOid = commit.stdout.trim();
+    const select = spawnSync(process.execPath, [
+      installedBin,
+      "select",
+      "commit",
+      commitOid,
+      "--repo",
+      fixture.root,
+    ], {
+      cwd: fixture.root,
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(select.status, 0, select.stderr);
+    assert.equal(JSON.parse(select.stdout).selection.oid, commitOid);
+
+    const selected = spawnSync(process.execPath, [installedBin, "selected", "--repo", fixture.root], {
+      cwd: fixture.root,
+      encoding: "utf8",
+      windowsHide: true,
+    });
+    assert.equal(selected.status, 0, selected.stderr);
+    assert.equal(JSON.parse(selected.stdout).selection.oid, commitOid);
+
     const installedLauncher = path.join(
       installRoot,
       "node_modules",

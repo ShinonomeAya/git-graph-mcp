@@ -8,7 +8,10 @@ const { commitFile, createTempRepo } = require("../helpers/git-repo");
 
 const repoRoot = path.resolve(__dirname, "../..");
 const binPath = path.join(repoRoot, "bin", "git-graph-mcp.js");
-const REQUEST_TIMEOUT = 5000;
+// The integration test executes many Git-backed requests in one process. Keep
+// enough headroom for Windows CI and concurrent repository fixtures while
+// still failing a genuinely stalled MCP transport promptly.
+const REQUEST_TIMEOUT = 15000;
 
 test("official MCP SDK client can initialize and list the existing tools", async () => {
   const fixture = createTempRepo();
