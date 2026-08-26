@@ -12,10 +12,19 @@
     "mcp": "node ./bin/git-graph-mcp.js mcp",
     "compare-selected": "node ./bin/git-graph-mcp.js compare-selected",
     "selected": "node ./bin/git-graph-mcp.js selected",
-    "status": "node ./bin/git-graph-mcp.js status"
+    "status": "node ./bin/git-graph-mcp.js status",
+    "check:syntax": "node --check ./bin/git-graph-mcp.js && node --check ./src/cli.js && node --check ./src/git.js && node --check ./src/graph.js && node --check ./src/mcp.js && node --check ./src/state.js && node --check ./src/tui.js",
+    "test:unit": "node --test test/unit",
+    "test:integration": "node --test test/integration",
+    "test": "node --test test",
+    "smoke": "node ./bin/git-graph-mcp.js graph --plain --limit 8",
+    "check": "npm run check:syntax && npm test && npm run smoke && npm pack --dry-run"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=22"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  }
 }

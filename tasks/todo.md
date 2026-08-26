@@ -1,0 +1,418 @@
+# git-graph-mcp v0.2 Task List
+
+Status: T03 completed; Checkpoint A awaiting review
+
+Rules for every task:
+
+- Read [CAPABILITY_MAP.md](../CAPABILITY_MAP.md), [docs/TECHNICAL_SOLUTION.md](../docs/TECHNICAL_SOLUTION.md), and only the selected module spec before editing.
+- Inspect overlapping uncommitted changes first and preserve unrelated work.
+- Do not commit, push, publish, tag, reset, checkout, or broadly stage files without explicit user approval.
+- Complete tasks in dependency order and stop at each checkpoint for review.
+
+## T01: Establish runtime and test baseline
+
+**Module:** `release-engineering`
+
+**Description:** Add the smallest Node built-in test harness, deterministic temporary-Git fixture helper, maintained runtime metadata, and repository-native check scripts without changing product behavior.
+
+**Acceptance criteria:**
+
+- [x] `package.json` advertises Node `>=22` and defines syntax, unit, integration, smoke, test, and check scripts.
+- [x] A temporary-repository helper configures a local test identity and never targets the development repository.
+- [x] At least the current pure graph behavior has a passing baseline test.
+
+**Verification:**
+
+- [x] `npm install` completes and lockfile metadata matches `package.json`.
+- [x] `npm run check:syntax` and `npm test` pass on the current source baseline.
+- [x] `git status --short` shows only expected project/test changes plus preserved pre-existing changes.
+
+**Dependencies:** None
+
+**Files likely touched:**
+
+- `package.json`
+- `package-lock.json`
+- `test/helpers/git-repo.js`
+- `test/unit/graph.test.js`
+
+**Estimated scope:** Medium (4 files)
+
+## T02: Restore standards-compliant MCP stdio
+
+**Module:** `mcp-server`
+
+**Description:** Reproduce the timeout with an official-client test, replace custom `Content-Length` framing with the SDK `StdioServerTransport`, and record the verified cause without keeping a second transport.
+
+**Acceptance criteria:**
+
+- [x] The official SDK client initializes the real bin process and lists the five existing tools within a bounded timeout.
+- [x] MCP stdout contains newline-delimited JSON-RPC only; no `Content-Length` header or debug text appears.
+- [x] The historical debug record identifies non-standard response framing as the reproduced cause and labels older hypotheses accurately.
+
+**Verification:**
+
+- [x] `node --test test/integration/mcp-stdio.test.js` passes.
+- [x] `npm run check:syntax` passes.
+- [x] Closing the client terminates the spawned server without an orphan process.
+
+**Dependencies:** T01
+
+**Files likely touched:**
+
+- `src/mcp.js`
+- `test/integration/mcp-stdio.test.js`
+- `docs/MCP_DEBUG_LOG.md`
+
+**Estimated scope:** Medium (3 files)
+
+## T03: Stabilize MCP schemas and errors
+
+**Module:** `mcp-server`
+
+**Description:** Define the v1 result/error contract, add boundary validation and `structuredContent`, preserve existing tool names/fields, and keep protocol errors separate from expected tool failures.
+
+**Acceptance criteria:**
+
+- [x] The five existing tools have `additionalProperties: false`, validated inputs, and documented output schemas.
+- [x] Successful outputs include `schemaVersion: 1` in structured and text content without removing useful existing fields.
+- [x] Invalid repository, revision, and limit inputs return stable `isError: true` tool results rather than timeouts or stacks.
+
+**Verification:**
+
+- [x] `node --test test/unit/mcp.test.js test/integration/mcp-stdio.test.js` passes.
+- [x] Contract assertions cover every existing tool and representative error.
+- [x] `npm run check:syntax` passes.
+
+**Dependencies:** T02
+
+**Files likely touched:**
+
+- `src/mcp.js`
+- `test/unit/mcp.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (3 files)
+
+## Checkpoint A: Protocol baseline
+
+- [ ] T01–T03 acceptance criteria pass.
+- [ ] `npm run check` passes.
+- [ ] Official SDK handshake and tool listing pass on Windows.
+- [ ] Human approves replacing the experimental transport before T04.
+
+## T04: Harden repository inputs and status/history
+
+**Module:** `git-domain`
+
+**Description:** Centralize repository/revision/limit validation, normalize empty and detached repositories, structure status without removing compact lines, and make CLI option failures explicit.
+
+**Acceptance criteria:**
+
+- [ ] Repository paths, revisions, and limits produce the documented normalized values or stable error codes.
+- [ ] Empty, detached, clean, staged, unstaged, and untracked fixtures return documented context/status shapes.
+- [ ] Unknown CLI options and options missing values fail non-zero with one concise stderr message.
+
+**Verification:**
+
+- [ ] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
+- [ ] Existing `graph`, `status`, and `inspect` smoke commands still work against temporary repositories.
+- [ ] Before/after fixture assertions prove read paths do not change Git state.
+
+**Dependencies:** Checkpoint A
+
+**Files likely touched:**
+
+- `src/git.js`
+- `src/cli.js`
+- `test/unit/git.test.js`
+- `test/integration/git-repositories.test.js`
+
+**Estimated scope:** Medium (4 files)
+
+## T05: Implement symmetric history comparison
+
+**Module:** `git-domain`
+
+**Description:** Replace the one-way `selected..HEAD` assumption with explicit SAME, ANCESTOR, DESCENDANT, and DIVERGED classification, merge base, both-side counts, dirty state, and warnings.
+
+**Acceptance criteria:**
+
+- [ ] All four relationship states return correct full oids, merge base, `headAheadCount`, and `headBehindCount`.
+- [ ] Changed files and diff stat are deterministic and merge commits do not create accidental duplicate entries.
+- [ ] Diverged, descendant, and dirty cases contain distinct safety warnings.
+
+**Verification:**
+
+- [ ] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
+- [ ] Counts match `git rev-list --left-right --count` in every fixture.
+- [ ] `compare-selected` returns valid JSON and leaves Git state unchanged.
+
+**Dependencies:** T04
+
+**Files likely touched:**
+
+- `src/git.js`
+- `test/unit/git.test.js`
+- `test/integration/git-repositories.test.js`
+
+**Estimated scope:** Medium (3 files)
+
+## T06: Make selection state versioned and worktree-safe
+
+**Module:** `selection-state`
+
+**Description:** Resolve the selection location through Git, support the legacy shape, write schema v1 atomically, and distinguish missing, malformed, unsupported, and stale state.
+
+**Acceptance criteria:**
+
+- [ ] Legacy data reads as normalized v1 and the next explicit write produces the v1 document.
+- [ ] Main and linked worktrees store independent selections at Git-resolved paths.
+- [ ] Atomic-write failure preserves the previous valid file; malformed/unsupported/stale cases have distinct errors.
+
+**Verification:**
+
+- [ ] `node --test test/unit/state.test.js test/integration/worktree-selection.test.js` passes.
+- [ ] An interrupted/rejected replacement test leaves the original JSON parseable.
+- [ ] `inspect`, `selected`, and comparison still agree on the selected oid.
+
+**Dependencies:** T05
+
+**Files likely touched:**
+
+- `src/state.js`
+- `src/git.js`
+- `test/unit/state.test.js`
+- `test/integration/worktree-selection.test.js`
+
+**Estimated scope:** Medium (4 files)
+
+## Checkpoint B: Read-only core
+
+- [ ] T04–T06 acceptance criteria pass.
+- [ ] `npm run check` passes.
+- [ ] Empty, detached, dirty, merged, divergent, and linked-worktree fixtures pass.
+- [ ] Human reviews the v1 state and comparison schemas before T07.
+
+## T07: Harden graph and interactive rendering
+
+**Module:** `terminal-ui`
+
+**Description:** Make graph/render helpers deterministic for empty, branch, merge, long, and narrow cases; isolate navigation logic; add bounded details; and guarantee terminal cleanup.
+
+**Acceptance criteria:**
+
+- [ ] Empty history, linear history, branches, merges, and graph continuation lines render as specified.
+- [ ] Navigation clamps safely, details remain bounded, and narrow terminals truncate display without changing data.
+- [ ] All quit/error paths restore cursor visibility and raw mode through one idempotent cleanup path.
+
+**Verification:**
+
+- [ ] `node --test test/unit/graph.test.js test/unit/tui.test.js` passes.
+- [ ] Plain snapshots contain no ANSI codes and remain deterministic.
+- [ ] Manual Windows TTY checks pass at 80×24 and about 60 columns.
+
+**Dependencies:** Checkpoint B
+
+**Files likely touched:**
+
+- `src/graph.js`
+- `src/tui.js`
+- `test/unit/graph.test.js`
+- `test/unit/tui.test.js`
+
+**Estimated scope:** Medium (4 files)
+
+## T08: Verify the complete CLI selection workflow
+
+**Module:** `terminal-ui`, `selection-state`
+
+**Description:** Exercise public CLI commands through the bin entrypoint, including non-TTY fallback, selection persistence, JSON output, and concise failure behavior.
+
+**Acceptance criteria:**
+
+- [ ] `graph --plain`, non-TTY `graph`, `status`, `inspect`, `selected`, and `compare-selected` pass end to end.
+- [ ] Machine commands write one parseable JSON document; plain graph writes text; failures write stderr and exit non-zero.
+- [ ] The commit saved through `inspect` is the same oid returned by CLI and MCP selection reads.
+
+**Verification:**
+
+- [ ] `node --test test/integration/cli-graph.test.js test/integration/mcp-stdio.test.js` passes.
+- [ ] `npm run smoke` passes from a disposable repository.
+- [ ] The development repository's refs/index/worktree are unchanged by the tests.
+
+**Dependencies:** T07
+
+**Files likely touched:**
+
+- `src/cli.js`
+- `test/integration/cli-graph.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (3 files)
+
+## Checkpoint C: Terminal acceptance
+
+- [ ] T07–T08 acceptance criteria pass.
+- [ ] `npm run check` passes.
+- [ ] Manual Windows terminal checks are recorded.
+- [ ] Human approves the read-only terminal workflow before actions are added.
+
+## T09: Add idempotent branch creation
+
+**Module:** `safe-actions`, `mcp-server`
+
+**Description:** Implement the complete vertical slice from selected state through validated domain ref creation to `git_create_branch_at_selected`, without checkout or force behavior.
+
+**Acceptance criteria:**
+
+- [ ] A valid new name creates exactly one local branch at the revalidated selected oid and leaves HEAD/index/worktree unchanged.
+- [ ] Retrying the same branch/oid succeeds with `created: false`; an existing branch elsewhere fails without mutation.
+- [ ] Invalid, option-like, missing, and stale inputs return documented error codes through MCP.
+
+**Verification:**
+
+- [ ] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
+- [ ] Before/after ref snapshots prove no existing ref moved.
+- [ ] The official client sees the sixth tool and its v1 result/error contract.
+
+**Dependencies:** Checkpoint C
+
+**Files likely touched:**
+
+- `src/actions.js`
+- `src/git.js`
+- `src/mcp.js`
+- `test/unit/actions.test.js`
+- `test/integration/safe-actions.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T10: Add reset preview without execution
+
+**Module:** `safe-actions`, `mcp-server`
+
+**Description:** Implement the pure reset planner and expose `git_reset_plan` for soft, mixed, and hard modes with current relationship, dirty-state warnings, exact proposed command, and backup suggestion.
+
+**Acceptance criteria:**
+
+- [ ] All three modes report correct ref/index/worktree impacts and set `requiresExplicitExternalExecution: true`.
+- [ ] SAME, ANCESTOR, DESCENDANT, DIVERGED, dirty, stale, and invalid-mode cases produce specified outputs/errors.
+- [ ] No planner or MCP path invokes `git reset` or changes refs, HEAD, index, worktree, or selection.
+
+**Verification:**
+
+- [ ] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
+- [ ] Git invocation assertions prove no `reset` subcommand was called.
+- [ ] The official client sees exactly seven tools and valid v1 reset-plan content.
+
+**Dependencies:** T09
+
+**Files likely touched:**
+
+- `src/actions.js`
+- `src/mcp.js`
+- `test/unit/actions.test.js`
+- `test/integration/safe-actions.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## Checkpoint D: Action safety
+
+- [ ] T09–T10 acceptance criteria pass.
+- [ ] `npm run check` passes.
+- [ ] Mutation snapshots show only the explicitly requested new branch.
+- [ ] Human approves branch conflict behavior and reset warnings.
+
+## T11: Make runtime configuration and npm package portable
+
+**Module:** `release-engineering`
+
+**Description:** Add the package allowlist, portable project MCP command, matching license, and an artifact test that forbids machine-specific or internal files.
+
+**Acceptance criteria:**
+
+- [ ] Checked-in MCP configuration uses `node` from `PATH` and repository-relative arguments.
+- [ ] The package declares Node `>=22`, contains the matching license, and uses an explicit runtime/public-doc allowlist.
+- [ ] Dry-run JSON proves local config, batch files, tests, tasks, specs, and debug logs are excluded.
+
+**Verification:**
+
+- [ ] `node --test test/integration/package.test.js` passes.
+- [ ] `npm pack --dry-run --json` contains only the approved artifact files.
+- [ ] A clean temporary install exposes `git-graph-mcp` and passes CLI/MCP smoke.
+
+**Dependencies:** Checkpoint D
+
+**Files likely touched:**
+
+- `package.json`
+- `package-lock.json`
+- `.mcp.json`
+- `LICENSE`
+- `test/integration/package.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T12: Align diagnostics and user documentation
+
+**Module:** `release-engineering`, `mcp-server`
+
+**Description:** Make logging opt-in and protocol-safe, then update README, setup, and debug history to match only verified commands, compatibility, safety, and troubleshooting behavior.
+
+**Acceptance criteria:**
+
+- [ ] Normal execution creates no debug log and MCP stdout remains protocol-only; opt-in logging excludes sensitive content.
+- [ ] README and Claude Code docs distinguish source-checkout and installed-package commands and contain no developer-specific paths.
+- [ ] Debug history records the framing mismatch and verified official-transport fix without asserting an unsupported upstream bug.
+
+**Verification:**
+
+- [ ] MCP integration passes with debug off and on.
+- [ ] Documentation commands are manually copied and verified on Windows.
+- [ ] `rg` finds no `F:\\sokusai`, `C:\\Program Files\\nodejs`, or temporary-log absolute path in public setup/package files.
+
+**Dependencies:** T11
+
+**Files likely touched:**
+
+- `src/mcp.js`
+- `README.md`
+- `docs/CLAUDE_CODE.md`
+- `docs/MCP_DEBUG_LOG.md`
+
+**Estimated scope:** Medium (4 files)
+
+## T13: Add CI and complete the release-candidate audit
+
+**Module:** `release-engineering`
+
+**Description:** Add the Windows/Ubuntu and Node 22/24 check matrix, then run the full local, packaged, and real-client acceptance suite without publishing or changing Git history.
+
+**Acceptance criteria:**
+
+- [ ] CI runs `npm ci` and `npm run check` on Windows/Ubuntu with Node 22/24 and all entries pass.
+- [ ] The packed artifact passes clean-install CLI and official MCP client acceptance on Windows.
+- [ ] The final audit finds no unapproved Git command path, machine-specific package content, or unintended working-tree change.
+
+**Verification:**
+
+- [ ] `npm run check` passes locally on a supported Node version.
+- [ ] CI results for all four matrix entries are recorded for human review.
+- [ ] `git diff --check`, `git status --short`, and package contents are reviewed; no commit, tag, push, or publish is performed.
+
+**Dependencies:** T12
+
+**Files likely touched:**
+
+- `.github/workflows/ci.yml`
+
+**Estimated scope:** Small (1 file plus verification)
+
+## Checkpoint E: v0.2 release review
+
+- [ ] All task acceptance criteria are checked.
+- [ ] All module success criteria are satisfied.
+- [ ] CI, packaged install, Windows Terminal, and Claude Code evidence are available.
+- [ ] Human explicitly decides whether to bump version, commit, tag, push, and/or publish.

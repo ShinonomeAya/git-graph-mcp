@@ -2,7 +2,7 @@
   "mcpServers": {
     "git-graph": {
       "type": "stdio",
-      "command": "F:\\WeChatwork\\微信web开发者工具\\node.exe",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": [
         "F:\\sokusai\\My project\\git-graph-mcp\\bin\\git-graph-mcp.js",
         "mcp"

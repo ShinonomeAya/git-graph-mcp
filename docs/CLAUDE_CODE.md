@@ -11,7 +11,7 @@ This repository includes a `.mcp.json` that starts the server with:
   "mcpServers": {
     "git-graph": {
       "type": "stdio",
-      "command": "F:\\WeChatwork\\微信web开发者工具\\node.exe",
+      "command": "C:\\Program Files\\nodejs\\node.exe",
       "args": ["F:\\sokusai\\My project\\git-graph-mcp\\bin\\git-graph-mcp.js", "mcp"]
     }
   }
@@ -25,7 +25,7 @@ When Claude Code opens this repository, it should prompt you to trust the projec
 From the project where you want Claude Code to use the graph tools:
 
 ```powershell
-claude mcp add --transport stdio --scope local git-graph -- "F:\WeChatwork\微信web开发者工具\node.exe" "F:\sokusai\My project\git-graph-mcp\bin\git-graph-mcp.js" mcp
+claude mcp add --transport stdio --scope local git-graph -- "C:\Program Files\nodejs\node.exe" "F:\sokusai\My project\git-graph-mcp\bin\git-graph-mcp.js" mcp
 ```
 
 Use `--scope user` instead of `--scope local` if you want the same server available across projects.
@@ -52,3 +52,14 @@ node .\bin\git-graph-mcp.js inspect HEAD
 node .\bin\git-graph-mcp.js selected
 node .\bin\git-graph-mcp.js compare-selected
 ```
+
+## Windows Stdio Timeout (Known Issue)
+
+On Windows, Claude Code currently has a bug reading stdout from stdio MCP servers, causing `connection timed out after 30000ms`. The server runs correctly and responds to requests, but Claude Code cannot read the response from the stdout pipe.
+
+Workarounds:
+
+1. **Use SSE / HTTP transport (recommended)** — Instead of stdio, expose the MCP server over HTTP/SSE. Claude Code supports `type: "sse"` MCP servers and the connection works on Windows.
+2. **Wait for Claude Code update** — This is a known upstream issue. A future Claude Code release may fix stdio pipe reading on Windows.
+3. **Use WSL** — Run Claude Code inside WSL2. The stdio pipe behavior works correctly in the Linux environment.
+4. **Use another AI client** — Other MCP clients (e.g. Cline, Roo Code, Cursor with MCP support) may handle stdio correctly on Windows.
