@@ -854,15 +854,15 @@ acceptance, release, capability, security, and contribution documents.
 
 **Acceptance criteria:**
 
-- [ ] No public-facing document claims 44 tests, seven tools, version 0.1.0,
+- [x] No public-facing document claims 44 tests, seven tools, version 0.1.0,
   or an unreleased state for the current release.
-- [ ] Public support/reporting, runtime support, install flow, and rollback path
+- [x] Public support/reporting, runtime support, install flow, and rollback path
   are explicit and free of machine-specific paths.
 
 **Verification:**
 
-- [ ] Version/count/path scan passes.
-- [ ] README install and doctor commands pass from a clean artifact.
+- [x] Version/count/path scan passes.
+- [x] README install and doctor commands pass from a clean artifact.
 
 **Dependencies:** T29
 

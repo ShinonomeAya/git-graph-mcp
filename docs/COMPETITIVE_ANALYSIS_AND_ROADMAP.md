@@ -31,10 +31,11 @@
 - 终端交互图和确定性的纯文本图；
 - 工作树、空仓库、detached HEAD、分叉关系和 linked worktree 处理；
 - Git 路径内的原子化选择状态；
-- 7 个结构化 MCP 工具；
+- 12 个结构化 MCP 工具和 2 个只读 resources；
 - 安全、幂等的“在选中提交创建分支”；
 - 只生成计划、不执行的 reset 影响预览；
-- 44 项测试和 Windows/Ubuntu × Node 22/24 CI。
+- 72 项测试和 Windows/Ubuntu × Node 22/24 CI；每个矩阵格还执行 clean package
+  install 和官方 registry production audit。
 
 当前主要缺口：
 
@@ -43,7 +44,8 @@
 - AI 需要组合 graph、status、selected、compare 等多个调用；
 - MCP 只暴露 tools，没有 selection/status resources 或更新通知；
 - Git 读取以同步子进程为主，尚未建立大仓库性能预算；
-- 当前包版本仍为 0.1.0，v0.2 的版本、tag 和 npm 发布仍待人工决定。
+- 当前包版本为 0.2.0；`v0.2.0` tag/Release 已存在但仓库仍为私有，npm 未发布；
+  后续修复若随最新代码公开，应另行准备补丁版本。
 
 ## 3. GitHub 样本
 

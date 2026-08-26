@@ -21,8 +21,8 @@
   方客户端约定不兼容。
 - 当前实现使用 `@modelcontextprotocol/sdk` 的
   `StdioServerTransport`，不再维护第二套 parser/writer。
-- Windows 官方 SDK 集成测试可以完成 initialize、列出七个工具、调用代
-  表性工具并正常关闭；stdout 只包含协议消息。
+- Windows 官方 SDK 集成测试可以完成 initialize、列出 12 个工具、读取两个
+  resources、调用代表性工具并正常关闭；stdout 只包含协议消息。
 
 ## 当前诊断行为
 

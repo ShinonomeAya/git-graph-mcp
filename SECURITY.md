@@ -25,5 +25,5 @@ public disclosure.
   in `.mcp.json`, diagnostics, screenshots, or bug reports.
 - Review `git_revalidate_plan` results before any separately approved write.
 - Treat MCP client configuration and tool calls as local user-authorized input.
-- Run `npm run check` and `npm run test:package-install` before distributing a
-  candidate package.
+- Run `npm run check`, `npm run test:package-install`, and the official-registry
+  production audit before distributing a package.

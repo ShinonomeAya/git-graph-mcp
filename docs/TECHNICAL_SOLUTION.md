@@ -347,7 +347,8 @@ No arbitrary coverage percentage gates v0.2. Every branch of safety-critical act
 - Keep the executable shebang and verify the installed bin on Windows and Linux.
 - Use `node` from `PATH` in checked-in project configuration; do not commit an absolute Node executable path.
 - CI covers Windows and Ubuntu on Node 22 and Node 24.
-- Target release is `0.2.0`; publication and Git tagging require explicit approval after release-candidate review.
+- The immutable `v0.2.0` release is the current baseline; any post-release code fixes
+  require a separately reviewed patch version before publication.
 
 ## 16. Boundaries
 

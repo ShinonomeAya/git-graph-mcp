@@ -1,158 +1,109 @@
-# v0.2 剩余验收测试计划
+# v0.2.0 发布前验收记录
 
-状态：T14 本机发布预检通过，候选 commit/push 已完成，T15 四格 CI 已通过；仍待人工发布放行
+状态：本地和维护运行时技术门禁已通过；仓库仍为私有，公开、补丁版本和 npm
+发布属于后续明确的外部决策。`v0.2.0` tag/Release 保持不变，最新修复提交在
+其后，若公开最新代码需准备 `v0.2.1`。
 
 ## 1. 验收目标
 
-确认已经实现的 v0.2 功能在发布前满足以下条件：
+确认以下用户路径在 Windows/Ubuntu 与 Node.js 22/24 上可重复：
 
-- 本地完整测试、CLI、TUI、MCP 和 npm 安装链路全部通过；
-- Windows/Ubuntu 与 Node.js 22/24 的 CI 矩阵配置正确并取得结果；
-- Claude Code 实际 `/mcp` 连接可用，且七个工具可见；
-- 包内容、Git 状态和安全边界没有未批准变更；
-- 在用户决定前不升级版本、不提交、不打 tag、不推送、不发布。
+- Git 图、选择状态、只读历史结果正确；
+- clean packed artifact 可以完成 `graph → select → selected → MCP read → doctor`；
+- 官方 MCP SDK 能完成握手、读取两个 resources、调用 12 个工具；
+- 包内容、安全边界、依赖审计和 CI 发布门禁没有未批准变更；
+- Claude Code 的真实 `/mcp` 页面和一次只读调用保留为客户端人工证据。
 
-## 2. 执行顺序
+## 2. 自动验收
 
 ### 阶段 A：本地回归
-
-执行：
 
 ```powershell
 npm ci
 npm run check
 npm run test:package-install
+npm audit --omit=dev --audit-level=high
 ```
 
-通过标准：
+通过标准：72 项测试、smoke、package allowlist、clean install、MCP handshake、
+选择读取、doctor 和官方 registry 审计全部通过；临时仓库与安装目录结束后清理。
 
-- syntax、unit、integration、smoke、package allowlist 全部通过；
-- 打包后的临时安装可以运行 CLI，并由官方 MCP 客户端列出七个工具；
-- 临时仓库、临时安装目录和测试选择状态在结束后清理。
-
-证据：命令退出码、测试总数、`npm pack --dry-run --json` 文件列表。
-
-### 阶段 B：终端人工验收
-
-在 Windows 真实 TTY 执行：
-
-```powershell
-node .\bin\git-graph-mcp.js graph --limit 8
-```
-
-逐项操作并记录：
-
-1. 初始画面显示分支、HEAD、提交图、详情面板和快捷键；
-2. `j`、`k`、方向键移动选中行，边界不越界；
-3. `s` 或 Enter 保存选择；
-4. `q` 退出，光标恢复，进程结束；
-5. 空仓库和窄宽度输出不溢出。
-
-通过标准：画面可读、操作有反馈、退出无残留进程或隐藏光标。
-
-证据：终端截图、退出码、选择文件前后 oid 对比。
-
-### 阶段 C：MCP 实际连接
-
-#### 官方 SDK 自动验收
+### 阶段 B：官方 SDK MCP 验收
 
 ```powershell
 node --test test/integration/mcp-stdio.test.js
 ```
 
-通过标准：initialize、工具列表、七个工具调用、预期错误和关闭全部通过；
-stdout 只包含协议消息。
+通过标准：initialize、resource list/read、12 个工具列表、只读调用、预期错误、
+安全分支动作和 reset 计划全部通过；stdout 只包含协议消息。
 
-#### Claude Code 人工验收
-
-在目标项目打开便携 `.mcp.json`，执行：
-
-```text
-/mcp
-```
-
-记录：Claude Code 版本、Node 版本、连接状态、工具数量，以及一次
-`git_graph` 或 `git_status` 只读调用。
-
-通过标准：`git-graph` 显示 connected，七个工具可见，调用结果含
-`schemaVersion: 1`。
-
-### 阶段 D：CI 矩阵验收
+### 阶段 C：CI 维护矩阵
 
 工作流：[.github/workflows/ci.yml](../.github/workflows/ci.yml)
-
-矩阵：
 
 | 操作系统 | Node.js 22 | Node.js 24 |
 |---|---:|---:|
 | Windows | PASS | PASS |
 | Ubuntu | PASS | PASS |
 
-记录：GitHub Actions run `32940965021`，提交 `3224cd8`，四个矩阵 job
-均完成 `npm ci` 和 `npm run check`。
+已完成证据：GitHub Actions run `32952666371`，四个矩阵 job 均完成 `npm run check`、
+`npm run test:package-install` 和官方 registry audit。任何后续代码提交都必须以
+对应的新 run 重新记录。
 
-每个格子必须完成 `npm ci` 和 `npm run check`。任一格失败则停止发布评审，
-记录失败日志后修复并重新运行。
-
-### 阶段 E：发布候选审查
-
-执行：
+### 阶段 D：发布候选审查
 
 ```powershell
 git diff --check
 git status --short
 npm pack --dry-run --json
-执行公共路径扫描，确认 README、docs、配置、源码和 bin 中没有机器专属绝对路径。
 ```
 
-通过标准：
+同时扫描 README、docs、配置、源码和 bin，确认没有机器专属绝对路径、凭据或
+未批准的 destructive Git executor。包内容只允许 `bin/`、`src/`、`README.md`、
+`LICENSE` 和 npm 生成的 `package.json`。
 
-- 没有绝对本机路径进入公共配置、文档或包；
-- 包只包含 `bin/`、`src/`、`README.md`、`LICENSE` 和 npm 生成的
-  `package.json`；
-- 源码没有 `git reset`、checkout、push、force-update 等未批准执行路径；
-- 工作树变化均属于本轮开发，且没有新的提交、tag、push 或发布。
+## 3. 人工验收
 
-## 3. 验收记录模板
+### 终端 TUI
+
+在真实 TTY 执行：
+
+```powershell
+node .\bin\git-graph-mcp.js graph --limit 8
+```
+
+检查图、HEAD、详情面板、`j`/`k` 或方向键、`s`/Enter 保存、`q` 退出、空仓库和
+窄宽度输出。证据为终端截图、退出码和选择文件前后 oid 对比。
+
+### Claude Code
+
+在目标项目配置本地 stdio server，执行 `/mcp`，记录客户端版本、Node 版本、连接
+状态、工具数量，并执行一次 `git_graph` 或 `git_status` 只读调用。通过标准为
+`git-graph` 显示 connected、12 个工具可见、结果含 `schemaVersion: 1`。
+
+当前仓库已有官方 SDK 和 `claude mcp list/get` 配置检查证据；实际 `/mcp` 页面截图
+和调用结果仍应由用户在自己的客户端留存，不能由自动测试代替。
+
+## 4. 当前验收记录
 
 ```text
-执行日期：
-执行环境：Windows / Ubuntu，Node，Git，npm
-阶段 A：PASS / FAIL
-阶段 B：PASS / FAIL，截图：
-阶段 C SDK：PASS / FAIL
-阶段 C Claude Code：PASS / FAIL / 未执行
-阶段 D Windows Node 22：PASS / FAIL / 待运行
-阶段 D Windows Node 24：PASS / FAIL / 待运行
-阶段 D Ubuntu Node 22：PASS / FAIL / 待运行
-阶段 D Ubuntu Node 24：PASS / FAIL / 待运行
-阶段 E：PASS / FAIL
-阻塞项：
-是否允许提交或发布：否，需用户明确决定
+执行日期：2026-08-26
+本机：Windows，Node.js 20.19.4（仅迁移检查），Git，npm
+阶段 A：PASS；npm test 72/72、check、clean install、official registry audit
+阶段 B：PASS；官方 MCP SDK integration
+阶段 C：PASS；GitHub Actions run 32952666371，Windows/Ubuntu × Node 22/24
+阶段 D：PASS；包 allowlist、diff check、路径/秘密扫描
+阶段 E：待用户；Claude Code 实际 /mcp 页面截图和一次只读调用
+版本/tag/Release：v0.2.0 已存在且保持不变
+仓库可见性：仍为私有
+阻塞项：若公开最新 master，需先决定是否创建 v0.2.1；然后再确认公开动作
 ```
 
-## 4. 当前已知剩余项
+## 5. 放行规则
 
-- 2026-08-26 本机阶段 A：PASS；`npm ci`、完整 `npm run check` 和
-  `npm run test:package-install` 均通过，共 44 项测试；当前 Node 20.19.4
-  仅作为迁移检查环境，不能替代 Node 22/24 验收；
-- T14 本地发布预检：PASS；重新执行锁定安装、44 项全量测试、清洁包安装、
-  官方 registry 安全审计、`npm pack --dry-run --json`、`git diff --check`
-  和公共路径扫描均通过；
-- 为兼容 Node 22/24，测试脚本已改为显式测试文件列表；临时 Node 22.23.2
-  和 Node 24.19.0 的 Windows 直接测试均通过 44 项，清洁打包安装也通过；
-- 生产依赖安全审计：初次官方 registry 检查发现 3 个 high 与 1 个 moderate
-  传递依赖问题；已将 MCP SDK 升级至 1.30.0 并刷新锁文件，复审结果为
-  `0 vulnerabilities`，升级后全量测试和清洁安装仍通过；
-- 阶段 B Windows TTY 和阶段 C 官方 SDK：此前已通过并有截图/测试证据；
-- Claude Code 2.1.177 的只读 `claude mcp list/get git-graph` 检查：配置被正确
-  识别，状态已为 `Connected`；项目级 `.mcp.json` 与 stdio 启动参数验收通过；
-- Claude Code 的实际 `/mcp` 页面与一次只读工具调用仍建议由用户在客户端留存
-  截图/结果，作为最终人工证据；
-- GitHub Actions 四格 Node 22/24：PASS；run `32940965021`，提交 `3224cd8`；
-- 私有 GitHub 仓库 `ShinonomeAya/git-graph-mcp` 已创建，本地 `origin` 已配置；
-  候选分支 `master` 已推送，远端分支指向 `3224cd8`；
-- 版本仍为 0.1.0；本次只提交并推送候选代码，升至 0.2.0、打 tag 和发布仍需
-  后续人工批准；
-- Claude Code 实际 `/mcp` 连接需要在用户的 Claude Code 客户端中确认；
-- Claude Code 实际 `/mcp` 页面截图和版本放行仍待人工确认，Checkpoint E 暂不通过。
+- 技术门禁未全绿时停止发布评审，不修改可见性或已发布 tag；
+- `v0.2.0` 不移动；包含后续代码修复的公开版本必须使用新的补丁版本；
+- GitHub 公开、补丁 tag/Release 和 npm publish 是互相独立的外部动作；
+- 公开前必须由用户明确确认最终目标 commit、版本和可见性；
+- 公开后的匿名 smoke 失败时，按 [RELEASE_CANDIDATE.md](RELEASE_CANDIDATE.md) 的
+  回滚顺序处理并保留失败证据。

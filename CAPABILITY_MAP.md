@@ -53,7 +53,7 @@ Detailed order, checkpoints, and risk handling live in [tasks/plan.md](tasks/pla
 
 ## Confirmed product boundaries
 
-- The terminal remains the primary UI; no Web UI is in the current candidate.
+- The terminal remains the primary UI; no Web UI is in the current release.
 - Windows plus Claude Code is the first manual acceptance environment.
 - Protocol behavior is verified with the official MCP SDK so Codex, Cursor, and other conforming clients are not coupled to Claude-specific behavior.
 - Branch creation may execute only after an explicit tool call with a valid new branch name.
@@ -63,7 +63,7 @@ Detailed order, checkpoints, and risk handling live in [tasks/plan.md](tasks/pla
 
 ## Initiative completion
 
-The candidate is ready for human release review only when every module success criterion passes,
+The release is ready for human visibility review only when every module success criterion passes,
 the checkpoints in `tasks/todo.md` are checked, and the applicable Windows/Ubuntu CI evidence is
-current. Repository visibility, version, tag, release, and npm publication are separate explicit
-actions.
+current. Repository visibility, any patch version, tag, release, and npm publication are separate
+explicit actions.

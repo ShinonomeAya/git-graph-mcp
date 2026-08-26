@@ -2,7 +2,7 @@
 
 ## 目标
 
-确认 v0.2 在 Windows + Node.js 22/24 + Git 环境下具备三类可用性：
+确认 v0.2.0 在 Windows + Node.js 22/24 + Git 环境下具备三类可用性：
 
 1. Git 域、选择状态和只读历史结果正确；
 2. CLI/TUI 在真实终端可操作且退出后不残留终端状态；
@@ -93,7 +93,7 @@ Git、选择文件或 MCP 配置。Node.js 20 在本机只作为迁移检查并�
 
 ## 本轮结果
 
-- 全量 `npm run check`：通过，71 项测试、smoke、package allowlist 通过；
+- 全量 `npm run check`：通过，72 项测试、smoke、package allowlist 通过；
 - `npm run test:benchmark`：通过，40 提交隔离临时仓库的 graph/search/diff/history 预算烟测；
 - `npm run test:package-install`：通过，安装后 CLI/MCP 均可用；
 - 真实 Windows TTY：通过，图形、选中行、详情和退出清理均正常；
@@ -101,16 +101,17 @@ Git、选择文件或 MCP 配置。Node.js 20 在本机只作为迁移检查并�
 - `doctor`：通过，clean packed artifact 可完成 runtime/Git/repo/config/stdio 诊断；
 - 生产依赖安全审计：通过（官方 npm registry，`npm audit --omit=dev --audit-level=high` 返回 0 vulnerabilities）；
 - MCP SDK 已从 1.29.0 升级到 1.30.0，并重新通过全量回归与打包安装测试；
-- 临时 Node.js 22.23.2 与 24.19.0：Windows 本机均通过 44 项测试；
+- 临时 Node.js 22.23.2 与 24.19.0：Windows 本机均通过 72 项测试；
 - 临时 Node.js 22.23.2 与 24.19.0：清洁打包安装测试也均通过；
 - 终端截图：已保存为本轮 Codex 可视化产物，画面显示 TUI 正常可用。
 
 ## 已完成的外部证据
 
-- GitHub Actions run `32940965021` 已验证 Windows/Ubuntu × Node 22/24 四个矩阵，
-  提交 `3224cd8` 的四个 job 均通过；
+- GitHub Actions run `32952666371` 已验证 Windows/Ubuntu × Node 22/24 四个矩阵，
+  提交 `9c58243` 的四个 job 均通过 `check`、clean package install 和官方 registry audit；
 
 ## 仍待人工确认
-- 用户实际 Claude Code 版本下的 `/mcp` 连接确认；
-- 永久安装 Node.js 22/24 不作为阻塞项：临时 22.23.2/24.19.0 已完成本机验收；
-- 发布前由用户决定是否升级版本 `0.2.0`、打 tag 或发布 npm；候选 commit/push 已完成。
+
+- 用户实际 Claude Code 版本下的 `/mcp` 页面和一次只读调用截图；
+- 若公开最新维护分支，是否创建包含 T28/T29/T31 修复的 `v0.2.1`；
+- GitHub 仓库公开动作和 npm 是否发布；当前 `v0.2.0` tag/Release 保持不变。
