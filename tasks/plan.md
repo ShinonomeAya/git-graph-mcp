@@ -248,7 +248,7 @@ Git context with narrow and explicit safety boundaries.
 
 ### Phase 8: v0.4 read-only history exploration
 
-- T21 — Add default-repository selection/status MCP resources with tool parity.
+- [x] T21 — Add default-repository selection/status MCP resources with tool parity.
 - T22 — Add paged commit search and ref/author/message filters.
 - T23 — Add structured commit diff and file history.
 - T24 — Add large-repository budgets and only optimize paths that miss them.

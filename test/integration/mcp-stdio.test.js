@@ -17,8 +17,9 @@ test("official MCP SDK client can initialize and list the existing tools", async
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [binPath, "mcp"],
-    cwd: repoRoot,
+    cwd: fixture.root,
     stderr: "pipe",
+    env: { GIT_GRAPH_MCP_REPO: fixture.root },
   });
 
   try {
@@ -27,6 +28,19 @@ test("official MCP SDK client can initialize and list the existing tools", async
       name: "git-graph",
       version: require("../../package.json").version,
     });
+    const capabilities = client.getServerCapabilities();
+    assert.ok(capabilities.resources);
+    assert.equal(capabilities.resources.subscribe, undefined);
+    assert.equal(capabilities.resources.listChanged, false);
+    const resources = await client.listResources({}, { timeout: REQUEST_TIMEOUT });
+    assert.deepEqual(resources.resources.map((resource) => resource.uri), [
+      "git-graph://default/selection",
+      "git-graph://default/status",
+    ]);
+    const resourceSelection = await client.readResource({ uri: "git-graph://default/selection" }, { timeout: REQUEST_TIMEOUT });
+    const resourceStatus = await client.readResource({ uri: "git-graph://default/status" }, { timeout: REQUEST_TIMEOUT });
+    assert.equal(JSON.parse(resourceSelection.contents[0].text).schemaVersion, 1);
+    assert.equal(JSON.parse(resourceStatus.contents[0].text).schemaVersion, 1);
     const result = await client.listTools({}, { timeout: REQUEST_TIMEOUT });
     const names = result.tools.map((tool) => tool.name);
 
@@ -74,6 +88,10 @@ test("official MCP SDK client can initialize and list the existing tools", async
       arguments: { repo: fixture.root },
     }, undefined, { timeout: REQUEST_TIMEOUT });
     assert.equal(selected.structuredContent.selectedCommit, commitOid);
+    const selectedResourceAfterInspect = await client.readResource({
+      uri: "git-graph://default/selection",
+    }, { timeout: REQUEST_TIMEOUT });
+    assert.deepEqual(JSON.parse(selectedResourceAfterInspect.contents[0].text), selected.structuredContent);
 
     const bundle = await client.callTool({
       name: "git_context_bundle",

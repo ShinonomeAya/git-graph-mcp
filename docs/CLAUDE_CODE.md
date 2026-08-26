@@ -47,13 +47,26 @@ For a source checkout in another project, replace the executable with
 - `git_graph`: show the commit graph and return structured commit metadata.
 - `git_status`: return compact branch and working-tree status.
 - `git_selected`: return the current saved selection.
+- `git_context_bundle`: return a bounded selection, status, graph, comparison,
+  and warning bundle; patch content is opt-in.
 - `git_inspect_commit`: inspect a commit and save it as the current selection.
 - `git_compare_selected_with_head`: compare the selection with `HEAD`.
 - `git_create_branch_at_selected`: create a new local branch at the selection; never move an existing branch.
 - `git_reset_plan`: preview soft, mixed, or hard reset impact; never execute reset.
 
-All successful tool results contain `schemaVersion: 1`. Expected failures use
-`isError: true` with a stable error code.
+Legacy tool results contain `schemaVersion: 1`; `git_context_bundle` uses
+schema version 2. Expected failures use `isError: true` with a stable error
+code.
+
+## Resources
+
+The server exposes two read-only resources for the default repository:
+
+- `git-graph://default/selection`: the same JSON payload as `git_selected`.
+- `git-graph://default/status`: the same JSON payload as `git_status`.
+
+Resource subscriptions and list-change notifications are intentionally not
+advertised. Clients without resource support can use the equivalent tools.
 
 ## Typical Claude prompt
 
@@ -81,7 +94,7 @@ For an installed package, use `npx git-graph-mcp mcp` in the MCP client and
 The historical Windows timeout came from an earlier custom transport that
 emitted `Content-Length`-framed messages. The current server uses the official
 SDK `StdioServerTransport`; the official SDK client integration passes on
-Windows and lists all seven tools.
+Windows and lists all eight tools plus both resources.
 
 If Claude Code still reports a connection failure:
 
@@ -91,5 +104,6 @@ If Claude Code still reports a connection failure:
 4. Set `GIT_GRAPH_MCP_DEBUG=1` only when diagnosing; concise lifecycle events
    go to stderr and never to MCP stdout.
 
-This repository records the verified official-client result; it does not claim
-that every Claude Code release has identical Windows behavior.
+This repository records the verified official-client result, including the
+resource list/read flow; it does not claim that every Claude Code release has
+identical Windows behavior.

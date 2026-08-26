@@ -1,7 +1,14 @@
 const path = require("path");
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { callTool, handleToolCall, jsonToolResult, listTools } = require("../../src/mcp");
+const {
+  callTool,
+  handleToolCall,
+  jsonToolResult,
+  listResources,
+  listTools,
+  readResource,
+} = require("../../src/mcp");
 
 const repoRoot = path.resolve(__dirname, "../..");
 
@@ -58,4 +65,30 @@ test("invalid graph limits return a stable tool error", () => {
     code: "INVALID_LIMIT",
     message: "limit must be an integer from 1 to 500.",
   });
+});
+
+test("resources expose default selection and status with tool-compatible JSON", () => {
+  const resources = listResources();
+
+  assert.deepEqual(resources.map((resource) => resource.uri), [
+    "git-graph://default/selection",
+    "git-graph://default/status",
+  ]);
+  assert.ok(resources.every((resource) => resource.mimeType === "application/json"));
+
+  const selection = readResource("git-graph://default/selection");
+  const status = readResource("git-graph://default/status");
+  const selectionTool = callTool({ name: "git_selected", arguments: { repo: repoRoot } });
+  const statusTool = callTool({ name: "git_status", arguments: { repo: repoRoot } });
+  assert.equal(selection.contents.length, 1);
+  assert.equal(status.contents.length, 1);
+  assert.deepEqual(JSON.parse(selection.contents[0].text), selectionTool.structuredContent);
+  assert.deepEqual(JSON.parse(status.contents[0].text), statusTool.structuredContent);
+});
+
+test("unknown resources return a stable resource error", () => {
+  assert.throws(
+    () => readResource("git-graph://default/unknown"),
+    (error) => error.code === "INVALID_RESOURCE_URI"
+  );
 });

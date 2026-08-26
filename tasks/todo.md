@@ -598,14 +598,14 @@ resources while keeping tools as the compatibility path.
 
 **Acceptance criteria:**
 
-- [ ] Resource and tool payloads use the same schema and error rules.
-- [ ] Unsupported subscriptions are not advertised.
-- [ ] Clients without resource support retain the full tool workflow.
+- [x] Resource and tool payloads use the same schema and error rules.
+- [x] Unsupported subscriptions are not advertised.
+- [x] Clients without resource support retain the full tool workflow.
 
 **Verification:**
 
-- [ ] Official SDK lists and reads both resources over stdio.
-- [ ] Existing tool integration tests remain unchanged and pass.
+- [x] Official SDK lists and reads both resources over stdio.
+- [x] Existing tool integration tests remain unchanged and pass.
 
 **Dependencies:** Checkpoint F
 

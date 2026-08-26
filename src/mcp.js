@@ -18,12 +18,31 @@ const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio
 const {
   ListToolsRequestSchema,
   CallToolRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   McpError,
   ErrorCode,
 } = require("@modelcontextprotocol/sdk/types.js");
 
 const SERVER_NAME = "git-graph";
 const SCHEMA_VERSION = 1;
+const RESOURCE_MIME_TYPE = "application/json";
+const RESOURCE_DEFINITIONS = Object.freeze([
+  {
+    uri: "git-graph://default/selection",
+    name: "git_selection",
+    title: "Git selection",
+    description: "The default repository's current immutable selection.",
+    tool: "git_selected",
+  },
+  {
+    uri: "git-graph://default/status",
+    name: "git_status",
+    title: "Git status",
+    description: "The default repository's compact working-tree status.",
+    tool: "git_status",
+  },
+]);
 
 class ToolError extends Error {
   constructor(code, message) {
@@ -37,11 +56,27 @@ async function runMcpServer() {
   debugLog("server starting");
   const server = new Server(
     { name: SERVER_NAME, version: SERVER_VERSION },
-    { capabilities: { tools: { listChanged: false } } }
+    { capabilities: { resources: { listChanged: false }, tools: { listChanged: false } } }
   );
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return { tools: listTools() };
+  });
+
+  server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    return { resources: listResources() };
+  });
+
+  server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    try {
+      return readResource(request.params.uri);
+    } catch (error) {
+      const toolError = normalizeToolError(error);
+      if (toolError) {
+        throw new McpError(ErrorCode.InvalidRequest, toolError.message);
+      }
+      throw error;
+    }
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -171,6 +206,42 @@ function listTools() {
       outputSchema: toolOutputSchema(),
     },
   ];
+}
+
+function listResources() {
+  return RESOURCE_DEFINITIONS.map(({ uri, name, title, description }) => ({
+    uri,
+    name,
+    title,
+    description,
+    mimeType: RESOURCE_MIME_TYPE,
+  }));
+}
+
+function readResource(uri) {
+  const definition = RESOURCE_DEFINITIONS.find((resource) => resource.uri === uri);
+  if (!definition) {
+    throw new ToolError("INVALID_RESOURCE_URI", "The requested resource URI is not supported.");
+  }
+
+  const result = handleToolCall({
+    name: definition.tool,
+    arguments: {},
+  });
+  const value = result.structuredContent || {
+    schemaVersion: SCHEMA_VERSION,
+    error: {
+      code: "RESOURCE_READ_FAILED",
+      message: "The resource did not return structured content.",
+    },
+  };
+  return {
+    contents: [{
+      uri,
+      mimeType: RESOURCE_MIME_TYPE,
+      text: JSON.stringify(value, null, 2),
+    }],
+  };
 }
 
 function callTool(params) {
@@ -345,6 +416,7 @@ function normalizeToolError(error) {
       "INVALID_REVISION",
       "INVALID_SELECTION_FILE",
       "INVALID_CONTEXT_BUDGET",
+      "INVALID_RESOURCE_URI",
       "NO_HEAD",
       "NO_SELECTION",
       "NOT_GIT_REPOSITORY",
@@ -426,6 +498,8 @@ module.exports = {
   callTool,
   handleToolCall,
   jsonToolResult,
+  listResources,
   listTools,
+  readResource,
   runMcpServer,
 };
