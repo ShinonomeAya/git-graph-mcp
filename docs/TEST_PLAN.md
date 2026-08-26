@@ -6,7 +6,7 @@
 
 1. Git 域、选择状态和只读历史结果正确；
 2. CLI/TUI 在真实终端可操作且退出后不残留终端状态；
-3. 官方 MCP 客户端可以完成握手、读取两个资源、调用十一个工具并获得稳定结果。
+3. 官方 MCP 客户端可以完成握手、读取两个资源、调用十二个工具并获得稳定结果。
 
 ## 测试层级
 
@@ -40,7 +40,7 @@ npm run test:integration
 
 - CLI graph/status/search/inspect/selected/compare-selected 的 JSON 或纯文本契约；
 - 官方 MCP SDK initialize、工具列表、成功结果和预期错误；
-- 十一个工具、两个资源、schemaVersion、错误码和 reset 只预览不执行；
+- 十二个工具、两个资源、schemaVersion、错误码和 reset 只预览不执行；
 - 诊断关闭时 stderr 为空，开启时只输出带时间戳的安全生命周期信息。
 
 ### 4. 打包安装测试

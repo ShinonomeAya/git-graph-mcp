@@ -261,7 +261,7 @@ Git context with narrow and explicit safety boundaries.
 
 ### Phase 9: v0.5 safe productization
 
-- T25 — Bind action-plan receipts to repository state fingerprints.
+- [x] T25 — Bind action-plan receipts to repository state fingerprints.
 - T26 — Add a local `doctor` command for runtime, Git, repo, and MCP setup.
 - T27 — Complete conditional public-release and contributor readiness.
 

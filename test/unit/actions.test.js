@@ -8,6 +8,7 @@ const {
   ActionError,
   buildResetPlan,
   createBranchAtSelected,
+  revalidateActionPlan,
   validateBranchName,
 } = require("../../src/actions");
 const { selectionPath, writeSelection } = require("../../src/state");
@@ -91,6 +92,65 @@ test("reset plans reject invalid modes and missing selections", () => {
     assert.throws(
       () => buildResetPlan(repo.root, "hard"),
       (error) => error instanceof ActionError && error.code === "NO_SELECTION"
+    );
+  });
+});
+
+test("action plan receipts revalidate expiry, dirty state, head, and moved refs", () => {
+  withRepo((repo) => {
+    const selected = commitFile(repo, "one.txt", "one\n", "one");
+    commitFile(repo, "two.txt", "two\n", "two");
+    writeSelection(repo.root, { selectedCommit: selected });
+    const plan = buildResetPlan(repo.root, "soft");
+    assert.match(plan.planId, /^[0-9a-f-]{36}$/);
+    assert.equal(typeof plan.createdAt, "string");
+    assert.equal(typeof plan.expiresAt, "string");
+    assert.ok(plan.stateFingerprint.headOid);
+    assert.equal(revalidateActionPlan(repo.root, plan).valid, true);
+
+    assert.throws(
+      () => revalidateActionPlan(repo.root, plan, { now: new Date(plan.expiresAt).getTime() + 1 }),
+      (error) => error.code === "PLAN_EXPIRED"
+    );
+
+    fs.writeFileSync(path.join(repo.root, "dirty.txt"), "dirty\n");
+    assert.throws(
+      () => revalidateActionPlan(repo.root, plan),
+      (error) => error.code === "PLAN_DIRTY_CHANGED"
+    );
+  });
+
+  withRepo((repo) => {
+    const selected = commitFile(repo, "one.txt", "one\n", "one");
+    writeSelection(repo.root, { selectedCommit: selected });
+    const plan = buildResetPlan(repo.root, "soft");
+    commitFile(repo, "two.txt", "two\n", "two");
+    assert.throws(
+      () => revalidateActionPlan(repo.root, plan),
+      (error) => error.code === "PLAN_STALE"
+    );
+  });
+});
+
+test("action plan receipts distinguish a moved selected ref", () => {
+  withRepo((repo) => {
+    const selected = commitFile(repo, "one.txt", "one\n", "one");
+    repo.runGit(["branch", "topic"]);
+    writeSelection(repo.root, {
+      schemaVersion: 2,
+      repoRoot: repo.root,
+      selection: {
+        kind: "ref",
+        ref: "refs/heads/topic",
+        oid: selected,
+      },
+    });
+    const plan = buildResetPlan(repo.root, "soft");
+    const moved = commitFile(repo, "two.txt", "two\n", "two");
+    repo.runGit(["update-ref", "refs/heads/topic", moved]);
+    assert.throws(
+      () => revalidateActionPlan(repo.root, plan),
+      (error) => error.code === "PLAN_REF_MOVED"
     );
   });
 });

@@ -420,6 +420,36 @@ function getGitStatus(root, options = {}) {
   };
 }
 
+function getRepositoryFingerprint(root, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
+  const status = git(resolvedRoot, ["status", "--porcelain=v1", "--branch"], { timeoutMs })
+    .trim();
+  const statusEntries = status
+    .split(/\r?\n/)
+    .filter((line) => line && !line.startsWith("##"))
+    .join("\n");
+  const headOid = canGit(resolvedRoot, ["rev-parse", "--verify", "HEAD"], { timeoutMs })
+    ? git(resolvedRoot, ["rev-parse", "HEAD"], { timeoutMs }).trim()
+    : null;
+  const currentRef = canGit(resolvedRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"], { timeoutMs })
+    ? git(resolvedRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"], { timeoutMs }).trim()
+    : "DETACHED";
+  const indexTree = canGit(resolvedRoot, ["write-tree"], { timeoutMs })
+    ? git(resolvedRoot, ["write-tree"], { timeoutMs }).trim()
+    : null;
+  const refs = git(resolvedRoot, ["show-ref"], { timeoutMs }).trim();
+  return {
+    repoRoot: resolvedRoot,
+    headOid,
+    currentRef,
+    indexTree,
+    status,
+    statusEntries,
+    refs,
+  };
+}
+
 function parseStatusLines(lines) {
   const statusLines = Array.isArray(lines) ? lines.filter(Boolean) : [];
   const branchLine = statusLines.find((line) => line.startsWith("##")) || "## DETACHED";
@@ -966,6 +996,7 @@ module.exports = {
   createBranch,
   getGitContext,
   getGitStatus,
+  getRepositoryFingerprint,
   normalizeLimit,
   parseRefs,
   parseStatusLines,

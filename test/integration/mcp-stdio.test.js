@@ -52,6 +52,7 @@ test("official MCP SDK client can initialize and list the existing tools", async
       "git_search_commits",
       "git_commit_diff",
       "git_file_history",
+      "git_revalidate_plan",
       "git_inspect_commit",
       "git_compare_selected_with_head",
       "git_create_branch_at_selected",
@@ -189,8 +190,9 @@ test("official MCP SDK client can initialize and list the existing tools", async
       message: "A valid new branch name is required.",
     });
 
+    let resetPlan;
     for (const mode of ["soft", "mixed", "hard"]) {
-      const resetPlan = await client.callTool({
+      resetPlan = await client.callTool({
         name: "git_reset_plan",
         arguments: { repo: fixture.root, mode },
       }, undefined, { timeout: REQUEST_TIMEOUT });
@@ -200,6 +202,13 @@ test("official MCP SDK client can initialize and list the existing tools", async
       assert.equal(resetPlan.structuredContent.requiresExplicitExternalExecution, true);
       assert.match(resetPlan.structuredContent.proposedCommand, new RegExp(`^git reset --${mode} `));
     }
+
+    const revalidated = await client.callTool({
+      name: "git_revalidate_plan",
+      arguments: { repo: fixture.root, plan: resetPlan.structuredContent },
+    }, undefined, { timeout: REQUEST_TIMEOUT });
+    assert.equal(revalidated.structuredContent.valid, true);
+    assert.equal(revalidated.structuredContent.planId, resetPlan.structuredContent.planId);
 
     const invalidResetMode = await client.callTool({
       name: "git_reset_plan",

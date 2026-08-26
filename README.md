@@ -52,6 +52,7 @@ current directory.
 - `git_search_commits` — page through commits with ref, author, message, and time filters.
 - `git_commit_diff` — read structured commit/file diff metadata with optional bounded patch text.
 - `git_file_history` — page through the history of one safe relative file path.
+- `git_revalidate_plan` — verify a reset/action receipt before any separately approved write.
 - `git_inspect_commit` — inspect and save a selection.
 - `git_compare_selected_with_head` — classify the relationship with `HEAD`.
 - `git_create_branch_at_selected` — create a new local branch at the selected oid, idempotently.

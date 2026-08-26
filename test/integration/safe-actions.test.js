@@ -4,7 +4,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const { commitFile, createTempRepo } = require("../helpers/git-repo");
-const { buildResetPlan, createBranchAtSelected } = require("../../src/actions");
+const { buildResetPlan, createBranchAtSelected, revalidateActionPlan } = require("../../src/actions");
 const { writeSelection } = require("../../src/state");
 
 function snapshot(repo) {
@@ -75,6 +75,25 @@ test("an existing branch at another oid fails without mutation", () => {
       (error) => error.code === "BRANCH_ALREADY_EXISTS"
     );
     assert.deepEqual(snapshot(repo), before);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("branch creation with a stale plan fails closed before changing refs", () => {
+  const repo = createTempRepo();
+  try {
+    const selected = commitFile(repo, "one.txt", "one\n", "one");
+    writeSelection(repo.root, { selectedCommit: selected });
+    const plan = buildResetPlan(repo.root, "soft");
+    commitFile(repo, "two.txt", "two\n", "two");
+    const before = snapshot(repo);
+    assert.throws(
+      () => createBranchAtSelected(repo.root, "review/stale", plan),
+      (error) => error.code === "PLAN_STALE"
+    );
+    assert.deepEqual(snapshot(repo), before);
+    assert.throws(() => revalidateActionPlan(repo.root, plan), (error) => error.code === "PLAN_STALE");
   } finally {
     repo.cleanup();
   }

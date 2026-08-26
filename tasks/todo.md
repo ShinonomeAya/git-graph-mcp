@@ -717,14 +717,14 @@ fingerprints so a later approved action fails closed if the repo changed.
 
 **Acceptance criteria:**
 
-- [ ] Every plan has an id, creation time, expiry, repo root, and state fingerprint.
-- [ ] Revalidation distinguishes expired, stale, dirty-changed, and ref-moved plans.
-- [ ] This task adds no destructive executor.
+- [x] Every plan has an id, creation time, expiry, repo root, and state fingerprint.
+- [x] Revalidation distinguishes expired, stale, dirty-changed, and ref-moved plans.
+- [x] This task adds no destructive executor.
 
 **Verification:**
 
-- [ ] Unit and integration tests mutate each fingerprint component and observe rejection.
-- [ ] Existing branch creation remains idempotent and reset remains plan-only.
+- [x] Unit and integration tests mutate each fingerprint component and observe rejection.
+- [x] Existing branch creation remains idempotent and reset remains plan-only.
 
 **Dependencies:** Checkpoint G
 

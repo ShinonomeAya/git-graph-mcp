@@ -1,4 +1,4 @@
-const { buildResetPlan, createBranchAtSelected } = require("./actions");
+const { buildResetPlan, createBranchAtSelected, revalidateActionPlan } = require("./actions");
 const {
   compareWithHead,
   getGitContext,
@@ -257,6 +257,19 @@ function listTools() {
       outputSchema: toolOutputSchema(),
     },
     {
+      name: "git_revalidate_plan",
+      description: "Revalidate a read-only action plan receipt against the current repository state.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        plan: {
+          type: "object",
+          description: "Receipt returned by git_reset_plan.",
+          additionalProperties: true,
+        },
+      }, ["plan"]),
+      outputSchema: toolOutputSchema(),
+    },
+    {
       name: "git_inspect_commit",
       description: "Inspect a commit and save it as the current AI-readable selection.",
       inputSchema: objectSchema({
@@ -279,6 +292,11 @@ function listTools() {
       inputSchema: objectSchema({
         repo: stringProp("Repository path."),
         name: requiredStringProp("New local branch name."),
+        plan: {
+          type: "object",
+          description: "Optional action plan receipt to revalidate before creating the branch.",
+          additionalProperties: true,
+        },
       }, ["name"]),
       outputSchema: toolOutputSchema(),
     },
@@ -445,12 +463,17 @@ function callTool(params) {
 
   if (name === "git_create_branch_at_selected") {
     const repo = resolveRepo(args.repo);
-    return jsonToolResult(createBranchAtSelected(repo, args.name));
+    return jsonToolResult(createBranchAtSelected(repo, args.name, args.plan));
   }
 
   if (name === "git_reset_plan") {
     const repo = resolveRepo(args.repo);
     return jsonToolResult(buildResetPlan(repo, args.mode));
+  }
+
+  if (name === "git_revalidate_plan") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(revalidateActionPlan(repo, args.plan));
   }
 
   throw new Error(`Unknown tool: ${name}`);
@@ -547,6 +570,12 @@ function normalizeToolError(error) {
       "INVALID_SEARCH_FILTER",
       "INVALID_SEARCH_CURSOR",
       "INVALID_DIFF_FILTER",
+      "INVALID_ACTION_PLAN",
+      "PLAN_EXPIRED",
+      "PLAN_DIRTY_CHANGED",
+      "PLAN_REF_MOVED",
+      "PLAN_STALE",
+      "UNSUPPORTED_SELECTION",
       "NO_HEAD",
       "NO_SELECTION",
       "NOT_GIT_REPOSITORY",
