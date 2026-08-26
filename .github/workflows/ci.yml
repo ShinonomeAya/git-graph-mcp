@@ -29,3 +29,11 @@ jobs:
 
       - name: Run repository checks
         run: npm run check
+
+      - name: Verify clean package installation
+        run: npm run test:package-install
+
+      - name: Audit production dependencies
+        env:
+          npm_config_registry: https://registry.npmjs.org
+        run: npm audit --omit=dev --audit-level=high
