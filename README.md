@@ -26,6 +26,10 @@ npx git-graph-mcp mcp
 ```
 
 See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
+See [CAPABILITY_MAP.md](CAPABILITY_MAP.md) for the capability/evidence map,
+[docs/DEMO.md](docs/DEMO.md) for the five-minute onboarding path,
+[CONTRIBUTING.md](CONTRIBUTING.md) for development boundaries, and
+[SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## CLI commands
 
@@ -64,7 +68,8 @@ Legacy results use `schemaVersion: 1`; context and search results use
 action never checks out or force-moves a branch. Reset planning is read-only and always sets
 `requiresExplicitExternalExecution: true`.
 
-The MCP server also exposes `git-graph://default/selection` and
+The MCP server currently exposes twelve tools and
+`git-graph://default/selection` and
 `git-graph://default/status` as read-only JSON resources. They mirror the
 corresponding tools; resource subscriptions are not advertised.
 

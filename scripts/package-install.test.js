@@ -49,6 +49,21 @@ test("packed artifact installs cleanly and exposes CLI and MCP entrypoints", asy
     assert.equal(graph.status, 0, graph.stderr);
     assert.match(graph.stdout, /git-graph-mcp/);
 
+    const installedLauncher = path.join(
+      installRoot,
+      "node_modules",
+      ".bin",
+      process.platform === "win32" ? "git-graph-mcp.cmd" : "git-graph-mcp"
+    );
+    const npxLikeGraph = spawnSync(installedLauncher, ["graph", "--plain", "--repo", fixture.root], {
+      cwd: fixture.root,
+      encoding: "utf8",
+      windowsHide: true,
+      shell: process.platform === "win32",
+    });
+    assert.equal(npxLikeGraph.status, 0, npxLikeGraph.stderr);
+    assert.match(npxLikeGraph.stdout, /git-graph-mcp/);
+
     const client = new Client({ name: "git-graph-mcp-package-test-client", version: "1.0.0" });
     const transport = new StdioClientTransport({
       command: process.execPath,

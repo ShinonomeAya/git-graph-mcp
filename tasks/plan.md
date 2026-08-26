@@ -263,7 +263,7 @@ Git context with narrow and explicit safety boundaries.
 
 - [x] T25 — Bind action-plan receipts to repository state fingerprints.
 - [x] T26 — Add a local `doctor` command for runtime, Git, repo, and MCP setup.
-- T27 — Complete conditional public-release and contributor readiness.
+- [x] T27 — Complete conditional public-release and contributor readiness.
 
 ### Checkpoint H: productization
 

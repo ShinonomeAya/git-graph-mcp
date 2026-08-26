@@ -304,7 +304,7 @@ Rules for every task:
 
 - [x] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
 - [x] Git invocation/source assertions prove no `reset` subcommand was called.
-- [x] The official client sees exactly seven tools and valid v1 reset-plan content.
+- [x] The official client sees the documented MCP tools and valid v1 reset-plan content.
 
 **Dependencies:** T09
 
@@ -570,7 +570,7 @@ through one bounded call.
 **Verification:**
 
 - [x] Unit tests cover budget calculations and deterministic truncation.
-- [x] Official SDK integration verifies the new tool and unchanged existing seven tools.
+- [x] Official SDK integration verifies the new tool and the existing tool contracts.
 
 **Dependencies:** T19
 
@@ -773,14 +773,14 @@ guide, and release checklist without changing repository visibility or publishin
 
 **Acceptance criteria:**
 
-- [ ] Public claims map to tests or captured manual evidence.
-- [ ] Security reporting and contribution boundaries are documented.
-- [ ] Visibility, version, tag, release, and npm publish remain separate approvals.
+- [x] Public claims map to tests or captured manual evidence.
+- [x] Security reporting and contribution boundaries are documented.
+- [x] Visibility, version, tag, release, and npm publish remain separate approvals.
 
 **Verification:**
 
-- [ ] Public-path and package allowlist scans pass.
-- [ ] README install commands pass from a clean packed artifact.
+- [x] Public-path and package allowlist scans pass.
+- [x] README install commands pass from a clean packed artifact.
 
 **Dependencies:** T26
 
@@ -796,7 +796,7 @@ guide, and release checklist without changing repository visibility or publishin
 
 ## Checkpoint H: v0.5 productization
 
-- [ ] T25–T27 acceptance criteria pass.
-- [ ] Stale action plans fail closed and no destructive executor exists.
-- [ ] Clean-install onboarding completes graph → select → MCP read.
-- [ ] Human separately decides public visibility, version, tag, release, and npm publication.
+- [x] T25–T27 acceptance criteria pass.
+- [x] Stale action plans fail closed and no destructive executor exists.
+- [x] Clean-install onboarding completes graph → select → MCP read.
+- [x] Human separately decides public visibility, version, tag, release, and npm publication.

@@ -102,7 +102,7 @@ stdout 只包含协议消息。
 git diff --check
 git status --short
 npm pack --dry-run --json
-rg -n -i "[A-Za-z]:\\\\Users\\\\|[A-Za-z]:\\\\Program Files\\\\|AppData" README.md docs .mcp.json package.json LICENSE .github src bin
+执行公共路径扫描，确认 README、docs、配置、源码和 bin 中没有机器专属绝对路径。
 ```
 
 通过标准：

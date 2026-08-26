@@ -383,7 +383,7 @@ No arbitrary coverage percentage gates v0.2. Every branch of safety-critical act
 v0.2 is ready for human release review when:
 
 - the official SDK client connects to the packaged stdio server on Windows;
-- all seven MCP tools appear and their success/error schemas pass contract tests;
+- all twelve MCP tools and two resources appear and their success/error schemas pass contract tests;
 - normal repositories, empty repositories, detached HEAD, divergent history, dirty trees, and linked worktrees pass automated tests;
 - `git_create_branch_at_selected` is idempotent and never moves an existing branch;
 - `git_reset_plan` never invokes reset and accurately describes all three modes;

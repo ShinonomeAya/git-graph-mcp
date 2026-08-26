@@ -93,11 +93,12 @@ Git、选择文件或 MCP 配置。Node.js 20 在本机只作为迁移检查并�
 
 ## 本轮结果
 
-- 全量 `npm run check`：通过，65 项测试、smoke、package allowlist 通过；
+- 全量 `npm run check`：通过，71 项测试、smoke、package allowlist 通过；
 - `npm run test:benchmark`：通过，40 提交隔离临时仓库的 graph/search/diff/history 预算烟测；
 - `npm run test:package-install`：通过，安装后 CLI/MCP 均可用；
 - 真实 Windows TTY：通过，图形、选中行、详情和退出清理均正常；
-- 官方 MCP SDK：通过，能列出十一个工具、读取两个资源并调用 reset 预览；
+- 官方 MCP SDK：通过，能列出十二个工具、读取两个资源并调用 reset 预览；
+- `doctor`：通过，clean packed artifact 可完成 runtime/Git/repo/config/stdio 诊断；
 - 生产依赖安全审计：通过（官方 npm registry，`npm audit --omit=dev --audit-level=high` 返回 0 vulnerabilities）；
 - MCP SDK 已从 1.29.0 升级到 1.30.0，并重新通过全量回归与打包安装测试；
 - 临时 Node.js 22.23.2 与 24.19.0：Windows 本机均通过 44 项测试；
