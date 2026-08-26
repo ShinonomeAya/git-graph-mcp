@@ -626,14 +626,14 @@ overloading graph rendering or accepting shell fragments.
 
 **Acceptance criteria:**
 
-- [ ] Search has deterministic ordering, bounded page size, and an explicit cursor.
-- [ ] All filters are passed as Git argument-array values and reject invalid refs.
-- [ ] CLI/MCP results report whether more results exist.
+- [x] Search has deterministic ordering, bounded page size, and an explicit cursor.
+- [x] All filters are passed as Git argument-array values and reject invalid refs.
+- [x] CLI/MCP results report whether more results exist.
 
 **Verification:**
 
-- [ ] Merge, unicode, no-result, invalid-filter, and multi-page fixtures pass.
-- [ ] Search leaves refs, index, worktree, and selection unchanged.
+- [x] Merge, unicode, no-result, invalid-filter, and multi-page fixtures pass.
+- [x] Search leaves refs, index, worktree, and selection unchanged.
 
 **Dependencies:** T21
 

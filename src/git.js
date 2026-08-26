@@ -211,6 +211,152 @@ function readLog(root, limit) {
   return commits;
 }
 
+function searchCommits(root, options = {}) {
+  const resolvedRoot = resolveRepo(root);
+  const pageSize = normalizeSearchPageSize(options.pageSize);
+  const filters = normalizeSearchFilters(resolvedRoot, options);
+  const cursor = decodeSearchCursor(options.cursor, filters);
+  const offset = cursor ? cursor.offset : 0;
+  const format = `${FIELD}%H${FIELD}%P${FIELD}%D${FIELD}%an${FIELD}%ae${FIELD}%at${FIELD}%s`;
+  const args = [
+    "log",
+    "--date-order",
+    "--decorate=full",
+    `--max-count=${pageSize + 1}`,
+    `--skip=${offset}`,
+    `--format=${format}`,
+  ];
+  if (filters.author) args.push(`--author=${filters.author}`);
+  if (filters.message) args.push("--fixed-strings", `--grep=${filters.message}`);
+  if (filters.since) args.push(`--since=${filters.since}`);
+  if (filters.until) args.push(`--until=${filters.until}`);
+  args.push(filters.ref);
+
+  const records = git(resolvedRoot, args)
+    .split(/\r?\n/)
+    .filter((line) => line.includes(FIELD))
+    .map((line) => parseCommitRecord(line.slice(line.indexOf(FIELD) + FIELD.length), ""));
+  const hasMore = records.length > pageSize;
+  const results = records.slice(0, pageSize).map(toSearchCommit);
+  const nextCursor = hasMore
+    ? encodeSearchCursor({ offset: offset + pageSize, filters })
+    : null;
+
+  return {
+    schemaVersion: 2,
+    repo: resolvedRoot,
+    repoRoot: resolvedRoot,
+    scope: { ref: filters.ref },
+    filters,
+    results,
+    page: {
+      pageSize,
+      cursor: options.cursor || null,
+      nextCursor,
+      hasMore,
+      returned: results.length,
+      offset,
+    },
+  };
+}
+
+function normalizeSearchPageSize(value) {
+  const normalized = value === undefined
+    ? 20
+    : typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value.trim())
+        ? Number(value)
+        : NaN;
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 100) {
+    throw new GitError("INVALID_SEARCH_FILTER", "pageSize must be an integer from 1 to 100.");
+  }
+  return normalized;
+}
+
+function normalizeSearchFilters(root, options) {
+  const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const ref = input.ref === undefined ? "HEAD" : normalizeSearchString(input.ref, "ref");
+  if (ref !== "HEAD") {
+    if (!isFullRefName(ref)) {
+      throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
+    }
+    resolveCommit(root, ref);
+  }
+  const filters = {
+    ref,
+    author: optionalSearchString(input.author, "author"),
+    message: optionalSearchString(input.message, "message"),
+    since: optionalSearchDate(input.since, "since"),
+    until: optionalSearchDate(input.until, "until"),
+  };
+  if (filters.since && filters.until && Date.parse(filters.since) > Date.parse(filters.until)) {
+    throw new GitError("INVALID_SEARCH_FILTER", "since must not be later than until.");
+  }
+  return filters;
+}
+
+function normalizeSearchString(value, name) {
+  if (typeof value !== "string" || !value.trim() || value.includes("\0")) {
+    throw new GitError("INVALID_SEARCH_FILTER", `${name} must be a non-empty string.`);
+  }
+  return value.trim();
+}
+
+function optionalSearchString(value, name) {
+  return value === undefined || value === null ? null : normalizeSearchString(value, name);
+}
+
+function optionalSearchDate(value, name) {
+  if (value === undefined || value === null) return null;
+  const normalized = normalizeSearchString(value, name);
+  if (!Number.isFinite(Date.parse(normalized))) {
+    throw new GitError("INVALID_SEARCH_FILTER", `${name} must be a valid Git date.`);
+  }
+  return normalized;
+}
+
+function encodeSearchCursor({ offset, filters }) {
+  return Buffer.from(JSON.stringify({ version: 1, offset, filters }), "utf8").toString("base64url");
+}
+
+function decodeSearchCursor(value, filters) {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "string" || !value.trim()) {
+    throw new GitError("INVALID_SEARCH_CURSOR", "cursor must be a valid search cursor.");
+  }
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch (error) {
+    throw new GitError("INVALID_SEARCH_CURSOR", "cursor must be a valid search cursor.", error);
+  }
+  if (
+    !payload
+    || payload.version !== 1
+    || !Number.isInteger(payload.offset)
+    || payload.offset < 0
+    || payload.offset > 1000000000
+    || JSON.stringify(payload.filters) !== JSON.stringify(filters)
+  ) {
+    throw new GitError("INVALID_SEARCH_CURSOR", "cursor does not match this search.");
+  }
+  return payload;
+}
+
+function toSearchCommit(commit) {
+  return {
+    hash: commit.hash,
+    shortHash: commit.shortHash,
+    parents: commit.parents,
+    refs: commit.refs,
+    author: commit.author,
+    timestamp: commit.timestamp,
+    date: commit.date,
+    subject: commit.subject,
+  };
+}
+
 function parseCommitRecord(record, graphPrefix) {
   const [hash, parentsRaw, refsRaw, authorName, authorEmail, timestampRaw, subject] = record.split(FIELD);
   return {
@@ -546,4 +692,5 @@ module.exports = {
   resolveCommit,
   resolveGitPath,
   resolveRepo,
+  searchCommits,
 };

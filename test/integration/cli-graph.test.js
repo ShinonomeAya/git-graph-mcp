@@ -98,6 +98,35 @@ test("CLI selection workflow returns one JSON document per machine command", () 
   }
 });
 
+test("CLI search returns deterministic pages and an explicit cursor", () => {
+  const repo = createTempRepo();
+  try {
+    const first = commitFile(repo, "one.txt", "one\n", "one");
+    const second = commitFile(repo, "two.txt", "two\n", "two");
+    const page = runCli(["search", "--repo", repo.root, "--limit", "1"], PROJECT_ROOT);
+    assert.equal(page.status, 0, page.stderr);
+    const parsed = JSON.parse(page.stdout);
+    assert.equal(parsed.schemaVersion, 2);
+    assert.equal(parsed.results.length, 1);
+    assert.equal(parsed.results[0].hash, second);
+    assert.equal(parsed.page.hasMore, true);
+    assert.equal(typeof parsed.page.nextCursor, "string");
+
+    const next = runCli([
+      "search",
+      "--repo", repo.root,
+      "--limit", "1",
+      "--cursor", parsed.page.nextCursor,
+    ], PROJECT_ROOT);
+    assert.equal(next.status, 0, next.stderr);
+    const nextParsed = JSON.parse(next.stdout);
+    assert.equal(nextParsed.results[0].hash, first);
+    assert.equal(nextParsed.page.hasMore, false);
+  } finally {
+    repo.cleanup();
+  }
+});
+
 test("typed CLI selection resolves commit, range, and full ref without changing Git state", () => {
   const repo = createTempRepo();
   try {

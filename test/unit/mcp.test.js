@@ -20,6 +20,7 @@ test("listTools exposes the available tools with closed input schemas", () => {
     "git_status",
     "git_selected",
     "git_context_bundle",
+    "git_search_commits",
     "git_inspect_commit",
     "git_compare_selected_with_head",
     "git_create_branch_at_selected",

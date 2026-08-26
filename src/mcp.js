@@ -6,6 +6,7 @@ const {
   normalizeLimit,
   readCommit,
   resolveRepo,
+  searchCommits,
 } = require("./git");
 const { buildGraphRows, renderGraphAfter, renderLane } = require("./graph");
 const { buildContextBundle } = require("./context");
@@ -171,6 +172,24 @@ function listTools() {
       outputSchema: toolOutputSchema(),
     },
     {
+      name: "git_search_commits",
+      description: "Search commits with bounded paging and literal author, message, ref, and time filters.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        pageSize: numberProp("Maximum commits per page. Defaults to 20.", {
+          minimum: 1,
+          maximum: 100,
+        }),
+        cursor: stringProp("Opaque cursor returned by a previous search page."),
+        ref: stringProp("Full Git ref to search, such as refs/heads/main. Defaults to HEAD."),
+        author: stringProp("Literal author name or email filter."),
+        message: stringProp("Literal commit subject/body filter."),
+        since: stringProp("Git-compatible lower time bound."),
+        until: stringProp("Git-compatible upper time bound."),
+      }),
+      outputSchema: toolOutputSchema(),
+    },
+    {
       name: "git_inspect_commit",
       description: "Inspect a commit and save it as the current AI-readable selection.",
       inputSchema: objectSchema({
@@ -298,6 +317,19 @@ function callTool(params) {
     }));
   }
 
+  if (name === "git_search_commits") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(searchCommits(repo, {
+      pageSize: args.pageSize,
+      cursor: args.cursor,
+      ref: args.ref,
+      author: args.author,
+      message: args.message,
+      since: args.since,
+      until: args.until,
+    }));
+  }
+
   if (name === "git_inspect_commit") {
     if (typeof args.commit !== "string" || !args.commit.trim() || args.commit.startsWith("-")) {
       throw new ToolError("INVALID_REVISION", "A valid commit revision is required.");
@@ -417,6 +449,9 @@ function normalizeToolError(error) {
       "INVALID_SELECTION_FILE",
       "INVALID_CONTEXT_BUDGET",
       "INVALID_RESOURCE_URI",
+      "INVALID_REF",
+      "INVALID_SEARCH_FILTER",
+      "INVALID_SEARCH_CURSOR",
       "NO_HEAD",
       "NO_SELECTION",
       "NOT_GIT_REPOSITORY",

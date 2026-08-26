@@ -6,6 +6,7 @@ const {
   readCommit,
   resolveSelectionTarget,
   resolveRepo,
+  searchCommits,
 } = require("./git");
 const { buildGraphRows } = require("./graph");
 const { runMcpServer } = require("./mcp");
@@ -47,6 +48,19 @@ async function runCli(argv) {
       status: status.lines,
       statusDetails: status,
     }, null, 2));
+    return;
+  }
+
+  if (command === "search") {
+    console.log(JSON.stringify(searchCommits(repo, {
+      pageSize: parsed.options.limit,
+      cursor: parsed.options.cursor,
+      ref: parsed.options.ref,
+      author: parsed.options.author,
+      message: parsed.options.message,
+      since: parsed.options.since,
+      until: parsed.options.until,
+    }), null, 2));
     return;
   }
 
@@ -112,6 +126,16 @@ const OPTION_DEFINITIONS = {
   graph: { "--repo": "value", "--limit": "value", "--plain": "flag" },
   status: { "--repo": "value", "--limit": "value" },
   selected: { "--repo": "value", "--limit": "value" },
+  search: {
+    "--repo": "value",
+    "--limit": "value",
+    "--cursor": "value",
+    "--ref": "value",
+    "--author": "value",
+    "--message": "value",
+    "--since": "value",
+    "--until": "value",
+  },
   "compare-selected": { "--repo": "value", "--limit": "value" },
   inspect: { "--repo": "value" },
   select: { "--repo": "value" },

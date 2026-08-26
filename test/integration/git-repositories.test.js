@@ -14,6 +14,7 @@ const {
   getGitStatus,
   readCommit,
   resolveRepo,
+  searchCommits,
 } = require("../../src/git");
 
 const PROJECT_ROOT = path.resolve(__dirname, "../..");
@@ -209,6 +210,29 @@ test("merge comparisons return deterministic, de-duplicated changed files", () =
     assert.equal(result.relation, "ANCESTOR");
     assert.equal(new Set(result.changedFiles).size, result.changedFiles.length);
     assert.deepEqual(result.changedFiles, ["A\tmain.txt"]);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("commit search keeps merge metadata and deterministic order", () => {
+  const repo = createTempRepo();
+  try {
+    commitFile(repo, "base.txt", "base\n", "base");
+    const mainBranch = repo.runGit(["branch", "--show-current"]).trim();
+    repo.runGit(["checkout", "-b", "feature"]);
+    const feature = commitFile(repo, "feature.txt", "feature\n", "feature");
+    repo.runGit(["checkout", mainBranch]);
+    const main = commitFile(repo, "main.txt", "main\n", "main");
+    repo.runGit(["merge", "--no-ff", "feature", "-m", "merge feature"]);
+    const merge = repo.runGit(["rev-parse", "HEAD"]).trim();
+
+    const result = searchCommits(repo.root, { pageSize: 10 });
+    assert.equal(result.page.hasMore, false);
+    assert.equal(result.results[0].hash, merge);
+    assert.equal(result.results[0].parents.length, 2);
+    assert.equal(result.results.some((commit) => commit.hash === feature), true);
+    assert.equal(result.results.some((commit) => commit.hash === main), true);
   } finally {
     repo.cleanup();
   }

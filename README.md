@@ -2,8 +2,9 @@
 
 `git-graph-mcp` is a terminal-first Git history viewer and local stdio MCP
 server for Claude Code and other AI coding tools. It lets a developer inspect
-history, save one commit as shared context, compare it with `HEAD`, create a
-new branch safely, and preview reset effects without executing reset.
+history, save commit/range/ref selections as shared context, search bounded
+history, compare it with `HEAD`, create a new branch safely, and preview reset
+effects without executing reset.
 
 ## Quick start
 
@@ -33,6 +34,7 @@ See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
 | `node .\bin\git-graph-mcp.js graph` | Interactive graph when a TTY is available |
 | `node .\bin\git-graph-mcp.js graph --plain` | Deterministic plain graph |
 | `node .\bin\git-graph-mcp.js status` | Structured branch and working-tree status |
+| `node .\bin\git-graph-mcp.js search --limit 20` | Bounded commit search with a cursor |
 | `node .\bin\git-graph-mcp.js inspect <commit>` | Inspect and save a commit selection |
 | `node .\bin\git-graph-mcp.js selected` | Read the saved selection |
 | `node .\bin\git-graph-mcp.js compare-selected` | Compare the selection with `HEAD` |
@@ -46,15 +48,21 @@ current directory.
 - `git_graph` — return graph text and structured commit metadata.
 - `git_status` — return compact and structured status.
 - `git_selected` — read the current selection.
+- `git_context_bundle` — read bounded selection, status, graph, comparison, and warnings.
+- `git_search_commits` — page through commits with ref, author, message, and time filters.
 - `git_inspect_commit` — inspect and save a selection.
 - `git_compare_selected_with_head` — classify the relationship with `HEAD`.
 - `git_create_branch_at_selected` — create a new local branch at the selected oid, idempotently.
 - `git_reset_plan` — describe soft, mixed, or hard reset effects without invoking `git reset`.
 
-Successful results use `schemaVersion: 1`; expected failures use a stable
-error code. The branch action never checks out or force-moves a branch. Reset
-planning is read-only and always sets
+Legacy results use `schemaVersion: 1`; context and search results use
+`schemaVersion: 2`. Expected failures use a stable error code. The branch
+action never checks out or force-moves a branch. Reset planning is read-only and always sets
 `requiresExplicitExternalExecution: true`.
+
+The MCP server also exposes `git-graph://default/selection` and
+`git-graph://default/status` as read-only JSON resources. They mirror the
+corresponding tools; resource subscriptions are not advertised.
 
 ## TUI keys
 

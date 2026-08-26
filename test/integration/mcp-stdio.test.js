@@ -49,6 +49,7 @@ test("official MCP SDK client can initialize and list the existing tools", async
       "git_status",
       "git_selected",
       "git_context_bundle",
+      "git_search_commits",
       "git_inspect_commit",
       "git_compare_selected_with_head",
       "git_create_branch_at_selected",
@@ -102,6 +103,14 @@ test("official MCP SDK client can initialize and list the existing tools", async
     assert.equal(bundle.structuredContent.budget.maxCommits, 1);
     assert.equal(bundle.structuredContent.patch, null);
     assert.equal(bundle.structuredContent.provenance.git, "system-git");
+
+    const search = await client.callTool({
+      name: "git_search_commits",
+      arguments: { repo: fixture.root, pageSize: 1 },
+    }, undefined, { timeout: REQUEST_TIMEOUT });
+    assert.equal(search.structuredContent.schemaVersion, 2);
+    assert.equal(search.structuredContent.results.length, 1);
+    assert.equal(search.structuredContent.page.hasMore, false);
 
     const comparison = await client.callTool({
       name: "git_compare_selected_with_head",

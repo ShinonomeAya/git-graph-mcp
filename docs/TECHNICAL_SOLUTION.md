@@ -36,14 +36,14 @@ The repository contains a small CommonJS CLI with these working capabilities:
 - static graph output and an interactive TUI;
 - commit selection persisted under `.git/`;
 - CLI commands for graph, status, selection, inspection, and comparison;
-- seven MCP tool definitions, including two safe-action tools;
+- nine MCP tool definitions, two read-only resources, and two safe-action tools;
 - the official SDK stdio transport and a preserved Windows timeout investigation.
 
 Verified on 2026-08-26:
 
 - `graph --plain` and `status` execute successfully;
 - all current JavaScript source files pass `node --check`;
-- the official SDK client completes initialize, lists all seven tools, and closes cleanly on Windows;
+- the official SDK client completes initialize, lists all nine tools and both resources, and closes cleanly on Windows;
 - stdout is newline-delimited MCP JSON-RPC through the official SDK transport;
 - `GIT_GRAPH_MCP_DEBUG=1` emits concise stderr-only lifecycle diagnostics;
 - the npm dry run is constrained to the runtime/public-document allowlist;
@@ -57,7 +57,7 @@ Verified on 2026-08-26:
 - Graph, status, commit inspection, and relationship comparison.
 - Versioned, atomic, worktree-compatible selection storage.
 - Static and interactive terminal views.
-- Official SDK stdio server with seven tools.
+- Official SDK stdio server with nine tools and two read-only resources.
 - Safe new-branch creation at the selected commit.
 - Soft, mixed, and hard reset impact previews.
 - Structured errors, opt-in diagnostics, automated tests, CI, and portable npm packaging.
