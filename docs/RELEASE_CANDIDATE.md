@@ -1,10 +1,10 @@
 # Release Candidate Readiness
 
-状态：Phase 9 本地候选已完成；尚未改变仓库可见性、版本、tag、release 或 npm 状态。
+状态：Phase 9 候选已完成；本次发布目标为私有 GitHub 仓库的 `v0.2.0` Release，npm 仍不发布。
 
 ## 当前基线
 
-- 包版本保持 `0.1.0`，下一版本号需人工批准；
+- 包版本为 `0.2.0`；
 - 运行时基线为 Node.js 22+、Git on `PATH`；Node.js 20 仅作迁移检查；
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；

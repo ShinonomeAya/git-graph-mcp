@@ -1,103 +1,84 @@
 # git-graph-mcp
 
-`git-graph-mcp` is a terminal-first Git history viewer and local stdio MCP
-server for Claude Code and other AI coding tools. It lets a developer inspect
-history, save commit/range/ref selections as shared context, search bounded
-history, compare it with `HEAD`, create a new branch safely, and preview reset
-effects without executing reset.
+一个本地优先的 Git 提交图终端工具，同时提供标准 MCP stdio 服务。它让人
+在终端选择提交或范围，再让 Claude Code、Codex、Cursor 等 MCP 客户端读取
+同一份受预算约束的 Git 上下文。
 
-## Quick start
+![终端预览](docs/assets/git-graph-preview.png)
 
-Requirements: Git on `PATH` and Node.js 22 or newer.
+## 能做什么
 
-From a source checkout:
+- 在终端查看提交图、分支、提交详情和工作区状态；
+- 保存 commit、range、ref 选择，并在 CLI/TUI/MCP 之间复用；
+- 通过 MCP 读取 graph、status、context、search、diff、history 和 resources；
+- 生成安全的分支动作与 reset 预览，不自动执行 reset/checkout/push；
+- 用 `doctor` 检查 Node.js、Git、仓库、MCP 配置和 stdio 握手。
+
+## 快速开始
+
+要求：Git 在 `PATH` 中，正式支持 Node.js 22+。
 
 ```powershell
 npm ci
-npm run check
-node .\bin\git-graph-mcp.js graph --plain
+node .\bin\git-graph-mcp.js graph --plain --limit 8
+node .\bin\git-graph-mcp.js doctor
 ```
 
-From an installed package:
+交互式 TUI：
 
 ```powershell
-npx git-graph-mcp graph --plain
-npx git-graph-mcp mcp
+node .\bin\git-graph-mcp.js graph
 ```
 
-See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
-See [CAPABILITY_MAP.md](CAPABILITY_MAP.md) for the capability/evidence map,
-[docs/DEMO.md](docs/DEMO.md) for the five-minute onboarding path,
-[CONTRIBUTING.md](CONTRIBUTING.md) for development boundaries, and
-[SECURITY.md](SECURITY.md) for vulnerability reporting.
+常用操作：
 
-## CLI commands
+```powershell
+node .\bin\git-graph-mcp.js status
+node .\bin\git-graph-mcp.js search --limit 20
+node .\bin\git-graph-mcp.js select commit <commit-oid>
+node .\bin\git-graph-mcp.js selected
+node .\bin\git-graph-mcp.js doctor --json
+```
 
-| Command | Purpose |
-|---|---|
-| `node .\bin\git-graph-mcp.js graph` | Interactive graph when a TTY is available |
-| `node .\bin\git-graph-mcp.js graph --plain` | Deterministic plain graph |
-| `node .\bin\git-graph-mcp.js status` | Structured branch and working-tree status |
-| `node .\bin\git-graph-mcp.js search --limit 20` | Bounded commit search with a cursor |
-| `node .\bin\git-graph-mcp.js inspect <commit>` | Inspect and save a commit selection |
-| `node .\bin\git-graph-mcp.js selected` | Read the saved selection |
-| `node .\bin\git-graph-mcp.js compare-selected` | Compare the selection with `HEAD` |
-| `node .\bin\git-graph-mcp.js doctor` | Diagnose runtime, Git, repository, MCP config, and stdio setup |
-| `node .\bin\git-graph-mcp.js mcp` | Start the stdio MCP server |
+目标仓库不是当前目录时，为命令追加 `--repo <path>`。
 
-Add `--repo <path>` to CLI commands when the target repository is not the
-current directory.
+## MCP 配置
 
-## MCP tools
+仓库根目录的 `.mcp.json` 使用本地 stdio：
 
-- `git_graph` — return graph text and structured commit metadata.
-- `git_status` — return compact and structured status.
-- `git_selected` — read the current selection.
-- `git_context_bundle` — read bounded selection, status, graph, comparison, and warnings.
-- `git_search_commits` — page through commits with ref, author, message, and time filters.
-- `git_commit_diff` — read structured commit/file diff metadata with optional bounded patch text.
-- `git_file_history` — page through the history of one safe relative file path.
-- `git_revalidate_plan` — verify a reset/action receipt before any separately approved write.
-- `git_inspect_commit` — inspect and save a selection.
-- `git_compare_selected_with_head` — classify the relationship with `HEAD`.
-- `git_create_branch_at_selected` — create a new local branch at the selected oid, idempotently.
-- `git_reset_plan` — describe soft, mixed, or hard reset effects without invoking `git reset`.
+```json
+{
+  "mcpServers": {
+    "git-graph": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["./bin/git-graph-mcp.js", "mcp"]
+    }
+  }
+}
+```
 
-Legacy results use `schemaVersion: 1`; context and search results use
-`schemaVersion: 2`. Expected failures use a stable error code. The branch
-action never checks out or force-moves a branch. Reset planning is read-only and always sets
-`requiresExplicitExternalExecution: true`.
+服务器提供 12 个有界工具和两个只读 resources：
+`git-graph://default/selection`、`git-graph://default/status`。MCP stdout
+只保留协议消息；诊断信息写入 stderr，且不会回显仓库路径、配置值或请求内容。
 
-The MCP server currently exposes twelve tools and
-`git-graph://default/selection` and
-`git-graph://default/status` as read-only JSON resources. They mirror the
-corresponding tools; resource subscriptions are not advertised.
+## 安全边界
 
-## TUI keys
+默认工作流是只读的。分支创建要求显式调用、不会移动已有分支；reset 只生成
+预览，`git_revalidate_plan` 会在动作前校验仓库状态指纹。项目不启动网络监听器，
+也不上传仓库内容。
 
-- `Up` / `k`: move up
-- `Down` / `j`: move down
-- `Enter` or `s`: inspect and save the selected commit
-- `q`: quit and restore the terminal state
+## 开发与发布
 
-## Safety model
+```powershell
+npm run check
+npm run test:package-install
+```
 
-The default workflow is read-only. Selection state is stored through Git's
-resolved path so linked worktrees remain isolated. A branch action revalidates
-the selected oid and refuses to move an existing branch. Reset plans report
-the relationship, dirty-state warnings, index/worktree impact, exact proposed
-command, and an informational backup-branch suggestion; no reset is executed
-by v0.2 code.
+更多内容：
 
-## Diagnostics
-
-Normal execution creates no log file and MCP stdout remains protocol-only. Set
-`GIT_GRAPH_MCP_DEBUG=1` temporarily to emit concise lifecycle messages on
-stderr. The diagnostics intentionally omit repository paths, request
-arguments, patch content, and environment dumps.
-
-Run `node .\bin\git-graph-mcp.js doctor` for concise human-readable checks, or
-add `--json` for a stable machine-readable report. A missing `.mcp.json` is a
-non-blocking warning; invalid configuration, an invalid repository, or a failed
-stdio handshake is reported with a stable failure code. The command is
-read-only and never prints repository paths or configuration values.
+- [五分钟 Demo](docs/DEMO.md)
+- [能力与测试证据](CAPABILITY_MAP.md)
+- [贡献指南](CONTRIBUTING.md)
+- [安全策略](SECURITY.md)
+- [发布清单](docs/RELEASE_CANDIDATE.md)

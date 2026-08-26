@@ -2,10 +2,9 @@
 
 All notable changes to `git-graph-mcp` are documented here.
 
-## Unreleased — v0.2 candidate
+## 0.2.0 — 2026-08-26
 
-This section describes the current candidate only. The package version remains
-`0.1.0` until the release gate is explicitly approved.
+This release contains the completed local-first MCP and terminal workflow.
 
 - Restored standards-compliant MCP stdio transport through the official SDK.
 - Added schema-versioned MCP results, stable expected-error codes, 12 bounded

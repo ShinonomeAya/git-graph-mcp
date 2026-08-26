@@ -1,4 +1,4 @@
-# Capability Map: git-graph-mcp v0.5 candidate
+# Capability Map: git-graph-mcp v0.2.0
 
 Status: approved on 2026-08-26
 
