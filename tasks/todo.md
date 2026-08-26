@@ -877,13 +877,13 @@ acceptance, release, capability, security, and contribution documents.
 
 **Acceptance criteria:**
 
-- [ ] Windows/Ubuntu Node 22/24 CI is green on the release commit.
-- [ ] Graph → select → MCP read and `doctor` are verified on a maintained runtime.
-- [ ] Evidence contains no repository paths, secrets, or private configuration values.
+- [x] Windows/Ubuntu Node 22/24 CI is green on the maintained commit (`15cea08`).
+- [x] Graph → select → MCP read and `doctor` are verified on a maintained runtime.
+- [x] Automated evidence contains no repository paths, secrets, or private configuration values.
 
 **Verification:**
 
-- [ ] Official SDK integration and clean-install tests pass.
+- [x] Official SDK integration and clean-install tests pass.
 - [ ] A client-side read-only call is recorded for release review.
 
 **Dependencies:** T29
@@ -937,7 +937,7 @@ technical gates pass and the user explicitly confirms the final visibility actio
 
 ## Checkpoint J: maintained-runtime release gate
 
-- [x] T29 CI gates and four-cell evidence pass.
+- [x] T29 CI gates and T31 four-cell evidence pass.
 - [x] Clean install, audit, MCP handshake, and automated user path are green; client-side evidence remains a manual gate.
 
 ## Checkpoint K: public review
