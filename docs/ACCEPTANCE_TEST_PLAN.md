@@ -1,7 +1,7 @@
-# v0.2.1 发布前验收记录
+# v0.2.1 发布验收记录
 
-状态：技术门禁已通过，`v0.2.1` tag/Release 已创建；仓库仍为私有，`v0.2.0`
-tag/Release 保持不变，npm 仍不发布，下一步执行公开和匿名验收。
+状态：技术门禁已通过，`v0.2.1` tag/Release 已创建，仓库已公开；`v0.2.0`
+tag/Release 保持不变，npm 仍不发布，匿名公开验收已通过。
 
 ## 1. 验收目标
 
@@ -45,7 +45,7 @@ node --test test/integration/mcp-stdio.test.js
 | Windows | PASS | PASS |
 | Ubuntu | PASS | PASS |
 
-已完成证据：GitHub Actions run `32955420207`（commit `849bbab`），四个矩阵 job 均
+已完成证据：GitHub Actions run `32957109919`（v0.2.1 commit `0ac0b4d`），四个矩阵 job 均
 完成 `npm run check`、`npm run test:package-install` 和官方 registry audit，且工作流
 使用维护中的 checkout/setup-node action runtime。
 
@@ -90,12 +90,14 @@ node .\bin\git-graph-mcp.js graph --limit 8
 本机：Windows，Node.js 20.19.4（仅迁移检查），Git，npm
 阶段 A：PASS；npm test 72/72、check、clean install、official registry audit
 阶段 B：PASS；官方 MCP SDK integration
-阶段 C：PASS；GitHub Actions run 32955420207，Windows/Ubuntu × Node 22/24
+阶段 C：PASS；GitHub Actions run 32957109919，v0.2.1 commit 0ac0b4d，Windows/Ubuntu × Node 22/24
 阶段 D：PASS；包 allowlist、diff check、路径/秘密扫描
-阶段 E：待用户；Claude Code 实际 /mcp 页面截图和一次只读调用
+阶段 E：PASS；匿名仓库、README、Release、tarball 下载和安装 smoke
+Claude Code 实际 /mcp 页面截图：建议由用户补留，不阻塞公开结果
 版本/tag/Release：v0.2.1 已创建；v0.2.0 保持不变
-仓库可见性：仍为私有
-阻塞项：公开动作已确认，待执行仓库可见性切换和匿名验收
+仓库可见性：PUBLIC
+匿名验收：PASS；API、README、v0.2.1 Release、tarball SHA256、Git metadata
+阻塞项：无技术阻塞；npm 发布仍未执行
 ```
 
 ## 5. 放行规则

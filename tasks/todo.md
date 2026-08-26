@@ -918,13 +918,13 @@ technical gates pass and the user explicitly confirms the final visibility actio
 **Acceptance criteria:**
 
 - [x] Repository visibility changes only after explicit confirmation.
-- [ ] Public README, release, security policy, and issue/reporting path are reachable.
-- [ ] Post-launch smoke and rollback verification are recorded.
+- [x] Public README, release, security policy, and issue/reporting path are reachable.
+- [x] Post-launch smoke and rollback verification are recorded.
 
 **Verification:**
 
-- [ ] Public anonymous repository/release/install checks pass.
-- [ ] First-release monitoring owner and rollback decision path are documented.
+- [x] Public anonymous repository/release/install checks pass.
+- [x] First-release monitoring owner and rollback decision path are documented.
 
 **Dependencies:** T32
 
@@ -947,4 +947,4 @@ technical gates pass and the user explicitly confirms the final visibility actio
 
 ## Checkpoint L: public launch
 
-- [ ] T33 visibility change and anonymous post-launch checks pass.
+- [x] T33 visibility change and anonymous post-launch checks pass.

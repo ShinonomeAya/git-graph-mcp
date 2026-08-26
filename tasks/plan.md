@@ -306,14 +306,14 @@ T16 human release gate
 
 ## Phase 10: public-release readiness remediation
 
-The private `v0.2.0` GitHub Release exists and remains immutable. T28–T32
-technical remediation is complete on `master`: bounded Windows cleanup, packed
-install/audit CI gates, reconciled public documents, maintained-runtime
-graph → select → MCP read → doctor evidence, and the release artifact/rollback
-review all pass. The local Node 20 environment remains migration-only. The only
-remaining product-release gates are the user's client-side `/mcp` evidence (a
-manual recommendation), the decision whether to create `v0.2.1` for the
-post-v0.2.0 fixes, and the final private-to-public visibility action.
+The `v0.2.0` GitHub Release remains immutable and `v0.2.1` is the public patch
+release. T28–T33 technical remediation is complete on `master`: bounded Windows
+cleanup, packed install/audit CI gates, reconciled public documents,
+maintained-runtime graph → select → MCP read → doctor evidence, release artifact
+review, visibility change, and anonymous post-launch checks all pass. The local
+Node 20 environment remains migration-only. A real Claude Code `/mcp` screenshot
+remains recommended manual evidence, and npm publication remains a separate,
+unapproved channel.
 
 ### Definition of done for public release
 
@@ -350,9 +350,10 @@ post-v0.2.0 fixes, and the final private-to-public visibility action.
    verify repository/package allowlists and rollback instructions, and record
    `v0.2.0` immutability. Because fixes landed after that tag, `v0.2.1` is the
    approved public target. Do not move `v0.2.0`.
-6. **T33 — Execute the visibility decision.** After T28–T32 pass, change the
-   repository to public only with explicit confirmation; verify the public
-   README, release, security policy, issue/reporting path, and install flow.
+6. **T33 — Execute the visibility decision [DONE].** After T28–T32 passed and
+   the user confirmed, the repository was changed to public; the public README,
+   v0.2.1 release, security policy, issue/reporting path, and install flow were
+   verified anonymously.
 
 ### Checkpoints
 
@@ -362,9 +363,9 @@ post-v0.2.0 fixes, and the final private-to-public visibility action.
   package install, audit, MCP handshake, and user-path evidence are recorded.
 - **Checkpoint K — public review [PASS]:** T30/T32 are complete, release/tag strategy
   is explicit, and no private path or secret appears in public artifacts.
-- **Checkpoint L — public launch [PENDING USER CONFIRMATION]:** T33 is the final external mutation; after it,
-  verify the public repository and release, then monitor issue reports for the
-  first release window.
+- **Checkpoint L — public launch [PASS]:** T33 completed the final external
+  mutation; the public repository and release passed anonymous checks. The
+  repository maintainer owns first-release monitoring and rollback decisions.
 
 ### Risks and mitigations
 
@@ -378,7 +379,7 @@ post-v0.2.0 fixes, and the final private-to-public visibility action.
 
 ### Open decisions
 
-- Whether the public distribution is GitHub source/release only or also npm;
-- Whether the first public release should be the existing `v0.2.0` after a green
-  rerun or a corrected `v0.2.1` patch release;
-- Who owns first-release issue triage and the rollback decision.
+- Whether and when npm publication is desired; GitHub source/release is the
+  current distribution channel;
+- Whether to publish later patch or minor versions;
+- First-release monitoring and rollback decisions are owned by `ShinonomeAya`.
