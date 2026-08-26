@@ -1,17 +1,17 @@
 # Release Candidate Readiness
 
-状态：技术发布门禁正在收口。GitHub 仓库当前仍为私有；`v0.2.0` tag 和
-Release 已存在且保持不变，npm 未发布。T28/T29/T31 的修复位于其后的
-`master` 提交，若公开最新代码，应单独准备 `v0.2.1` 补丁版本。
+状态：v0.2.1 补丁候选已准备，GitHub 仓库当前仍为私有；`v0.2.0` tag 和
+Release 已存在且保持不变，npm 未发布。v0.2.1 的 tag/Release 将在本轮最终
+CI 通过后创建。
 
 ## 当前基线
 
-- 包版本为 `0.2.0`；
+- 包版本为 `0.2.1`；
 - 运行时基线为 Node.js 22+、Git on `PATH`；Node.js 20 仅作迁移检查；
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；
 - 默认 Git 读取保持只读，reset 只生成计划，分支创建需要显式调用；
-- 当前维护分支最新技术修复提交为 `849bbab`，不移动已发布的 `v0.2.0`。
+- 当前维护分支包含 T28–T32 修复，不移动已发布的 `v0.2.0`。
 
 ## 已验证证据
 
@@ -35,9 +35,9 @@ Release 已存在且保持不变，npm 未发布。T28/T29/T31 的修复位于�
 
 1. [x] 本地实现、测试、打包 allowlist 和安全边界审查；
 2. [x] `SECURITY.md`、`CONTRIBUTING.md`、README 和 capability map 与实现一致；
-3. [x] `0.2.0` 版本、CHANGELOG、tag 和 GitHub Release 已完成；
-4. [ ] 用户批准将仓库公开；
-5. [ ] 若公开最新 `master`，用户批准创建 `v0.2.1` 补丁版本、tag 和 Release；
+3. [x] 用户批准以 `0.2.1` 作为包含后续修复的公开版本；
+4. [ ] `0.2.1` 版本、tag 和 GitHub Release 创建完成；
+5. [ ] 用户批准将仓库公开；
 6. [ ] 用户批准 npm publish（当前默认不发布）。
 
 ## 回滚与禁止自动执行

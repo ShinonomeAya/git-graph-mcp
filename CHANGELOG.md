@@ -2,6 +2,18 @@
 
 All notable changes to `git-graph-mcp` are documented here.
 
+## 0.2.1 — 2026-08-26
+
+This patch release hardens the public-release path after the immutable `v0.2.0`
+baseline.
+
+- Added bounded Windows fixture cleanup retries that preserve diagnostics.
+- Made clean packed installation and official-registry production audit required
+  gates in every Node.js 22/24 Windows/Ubuntu CI cell.
+- Verified the installed artifact's graph → select → selected → MCP → doctor flow.
+- Reconciled public release, acceptance, security, capability, and contribution
+  documentation; upgraded GitHub Actions to maintained runtimes.
+
 ## 0.2.0 — 2026-08-26
 
 This release contains the completed local-first MCP and terminal workflow.

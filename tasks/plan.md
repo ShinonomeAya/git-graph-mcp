@@ -326,8 +326,8 @@ post-v0.2.0 fixes, and the final private-to-public visibility action.
   state.
 - Node 22/24 user-path evidence covers graph → select → MCP read and `doctor`;
   paths/configuration values are not exposed in screenshots or logs.
-- Existing `v0.2.0` tag is never moved. Any code fix after that tag ships as a
-  new patch release (planned `v0.2.1`) after the gate passes.
+- Existing `v0.2.0` tag is never moved. The post-tag fixes ship as the approved
+  `v0.2.1` patch release after the final CI gate passes.
 - Public visibility is changed only after the technical gate is green. npm
   publication remains a separate decision and is not implied by GitHub release.
 
@@ -348,9 +348,8 @@ post-v0.2.0 fixes, and the final private-to-public visibility action.
    manual evidence recommendation, and the local Node 20 warning stays separate.
 5. **T32 — Prepare the public-release gate [DONE].** Build a clean release artifact,
    verify repository/package allowlists and rollback instructions, and record
-   `v0.2.0` immutability. Because fixes landed after that tag, `v0.2.1` is
-   identified but not created until the user chooses the public target. Do not
-   move `v0.2.0`.
+   `v0.2.0` immutability. Because fixes landed after that tag, `v0.2.1` is the
+   approved public target. Do not move `v0.2.0`.
 6. **T33 — Execute the visibility decision.** After T28–T32 pass, change the
    repository to public only with explicit confirmation; verify the public
    README, release, security policy, issue/reporting path, and install flow.
