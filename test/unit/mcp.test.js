@@ -20,7 +20,7 @@ test("listTools exposes the seven existing tools with closed input schemas", () 
 
   for (const tool of tools) {
     assert.equal(tool.inputSchema.additionalProperties, false);
-    assert.equal(tool.outputSchema.properties.schemaVersion.const, 1);
+    assert.deepEqual(tool.outputSchema.properties.schemaVersion.enum, [1, 2]);
     assert.deepEqual(tool.outputSchema.required, ["schemaVersion"]);
   }
 });

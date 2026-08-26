@@ -369,7 +369,7 @@ function toolOutputSchema() {
     properties: {
       schemaVersion: {
         type: "integer",
-        const: SCHEMA_VERSION,
+        enum: [1, 2],
       },
       error: {
         type: "object",

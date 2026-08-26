@@ -1,22 +1,22 @@
 # Spec: selection-state
 
-Status: draft for review
+Status: v2 state-layer implementation; CLI/TUI integration is deferred to T18-T19
 
 ## Objective
 
-Store the user's selected commit as versioned JSON owned by the target Git repository, with atomic writes, linked-worktree support, legacy migration, and clear stale-selection behavior.
+Store the user's selected commit, range, or ref as versioned JSON owned by the target Git repository, with atomic writes, linked-worktree support, legacy migration, and clear stale-selection behavior.
 
 ## Responsibilities
 
 - Ask `git-domain` for the Git-managed selection path.
-- Read no-selection, legacy-selection, current-selection, malformed, and stale cases predictably.
-- Normalize legacy data in memory without rewriting it on read.
-- Write schema version 1 atomically.
+- Read no-selection, legacy-selection, v1, v2, malformed, moved-ref, and stale cases predictably.
+- Normalize legacy and v1 data to the v2 in-memory contract without rewriting it on read.
+- Write schema version 2 atomically.
 - Preserve one independent selection per linked worktree.
 
 ## Non-goals
 
-- Storing branch/lane selections.
+- Storing terminal lane numbers; refs are stored by full name and immutable oid.
 - Synchronizing selections over sockets or a network.
 - Keeping a selection history.
 - Automatically choosing another commit when the saved commit disappears.
@@ -43,7 +43,7 @@ node --check .\src\state.js
 
 | Function | Behavior |
 |---|---|
-| `readSelection(root)` | Return `null` when absent; otherwise return normalized schema version 1 data or a stable state error |
+| `readSelection(root)` | Return `null` when absent; otherwise return normalized schema version 2 data or a stable state error |
 | `writeSelection(root, selection)` | Validate normalized input and atomically replace the repository-owned file |
 | `selectionPath(root)` | Return the absolute path supplied by `git-domain.resolveGitPath` |
 
@@ -51,9 +51,9 @@ New writes use:
 
 ```js
 {
-  schemaVersion: 1,
+  schemaVersion: 2,
   repoRoot,
-  selected: {
+  selection: {
     kind: "commit",
     oid,
   },
@@ -66,7 +66,14 @@ New writes use:
 }
 ```
 
-The reader accepts the existing object with `selectedCommit` and maps it to `selected.oid`. Unknown future schema versions fail with `UNSUPPORTED_SELECTION_VERSION`; malformed JSON fails with `INVALID_SELECTION_FILE`; a missing saved commit fails validation with `STALE_SELECTION` when a caller requests an action or comparison.
+The reader accepts the existing object with `selectedCommit` and schema v1's
+`selected` object, mapping both to the v2 `selection` field in memory without
+rewriting the file. A range stores `baseOid` and `headOid`; a ref stores its full
+name and the oid observed at selection time. New writes validate full immutable
+oids and write only schema v2 fields. Unknown future schema versions fail with
+`UNSUPPORTED_SELECTION_VERSION`; malformed JSON or contracts fail with
+`INVALID_SELECTION_FILE`; a missing commit fails with `STALE_SELECTION`; and a
+ref whose current oid differs from its stored oid fails with `MOVED_REF`.
 
 ## Atomic-write behavior
 
@@ -84,7 +91,8 @@ Keep schema normalization explicit:
 
 ```js
 function normalizeSelection(value) {
-  if (value && value.schemaVersion === 1) return validateV1(value);
+  if (value && value.schemaVersion === 2) return validateV2(value);
+  if (value && value.schemaVersion === 1) return fromV1Selection(value);
   if (value && value.selectedCommit) return fromLegacySelection(value);
   throw createStateError("INVALID_SELECTION_FILE", "Selection data is not valid.");
 }
@@ -92,12 +100,16 @@ function normalizeSelection(value) {
 
 ## Testing strategy
 
-Unit tests cover absent files, valid v1, current legacy input, malformed JSON, unsupported versions, invalid object ids, and simulated replacement failure. Integration tests prove that two linked worktrees do not overwrite each other's selection and that a deleted/re-written commit is reported as stale before an action.
+Unit tests cover absent files, v1 and legacy normalization, v2 commit/range/ref
+writes, malformed JSON, unsupported versions, invalid immutable ids, moved refs,
+stale commits, and simulated replacement failure. Integration tests prove that
+two linked worktrees do not overwrite each other's selection and that the
+selection file remains repository-owned.
 
 ## Boundaries
 
-- Always: validate external JSON; write atomically; use the Git-resolved path; preserve legacy readability in v0.2.
-- Ask first: change the schema version; share selection across worktrees; add selection history.
+- Always: validate external JSON; write atomically; use the Git-resolved path; preserve legacy readability.
+- Ask first: add another schema version; share selection across worktrees; add selection history.
 - Never: place state in the npm package or tracked project files; silently substitute HEAD for a stale selection; rewrite a legacy file merely because it was read.
 
 ## Success criteria
@@ -110,4 +122,5 @@ Unit tests cover absent files, valid v1, current legacy input, malformed JSON, u
 
 ## Open questions
 
-None for v0.2.
+- CLI and TUI range/ref selection are intentionally deferred to T18-T19; this
+  state-layer change does not add new commands or interaction modes.

@@ -223,3 +223,83 @@ This phase prepares the candidate without changing Git history or publishing.
 - [ ] T14–T16 acceptance criteria pass.
 - [ ] No unreviewed high-severity dependency findings remain.
 - [ ] No publish, tag, push, or release occurs without explicit approval.
+
+## Post-v0.2 product direction
+
+Competitive research and the recommended architecture are recorded in
+`docs/COMPETITIVE_ANALYSIS_AND_ROADMAP.md`. The project will not pursue a
+full Git client. Its differentiator is a human-selected, AI-readable, local
+Git context with narrow and explicit safety boundaries.
+
+### Phase 7: v0.3 human-approved context bundle
+
+- [x] T17 — Add selection schema v2 with v1-compatible reads.
+- T18 — Add commit/range/ref selection to the Git domain and CLI.
+- T19 — Add two-anchor range and ref selection to the TUI.
+- T20 — Add a budgeted `git_context_bundle` MCP tool.
+
+### Checkpoint F: context bundle
+
+- TUI, CLI, and MCP resolve the same immutable oids.
+- Legacy v1 selection files remain readable.
+- All read paths preserve refs, index, worktree, and selection.
+- Bundle count/byte limits and `truncated` markers pass contract tests.
+- Human reviews the v0.3 contract before Phase 8.
+
+### Phase 8: v0.4 read-only history exploration
+
+- T21 — Add default-repository selection/status MCP resources with tool parity.
+- T22 — Add paged commit search and ref/author/message filters.
+- T23 — Add structured commit diff and file history.
+- T24 — Add large-repository budgets and only optimize paths that miss them.
+
+### Checkpoint G: read-only exploration
+
+- Search, diff, and file history remain bounded and deterministic.
+- Resource and tool results share the same schema.
+- No database, daemon, network listener, or new write action is introduced.
+
+### Phase 9: v0.5 safe productization
+
+- T25 — Bind action-plan receipts to repository state fingerprints.
+- T26 — Add a local `doctor` command for runtime, Git, repo, and MCP setup.
+- T27 — Complete conditional public-release and contributor readiness.
+
+### Checkpoint H: productization
+
+- Stale plans fail closed without mutation.
+- A clean install completes graph → select → MCP read within the onboarding flow.
+- Repository visibility, version, tag, and npm publication remain separate human decisions.
+
+## Post-v0.2 architecture decisions
+
+- Stay on Node.js/CommonJS through v0.3; no language or module migration.
+- Keep the system Git CLI as the only Git engine.
+- Treat terminal lanes as UI state; persist only commit oids and full refs.
+- Keep stdio and local-first defaults; no Streamable HTTP in these phases.
+- Prefer richer read-only context over a larger write-tool surface.
+- Add performance complexity only after a repeatable benchmark misses its budget.
+
+## Post-v0.2 dependency order
+
+```text
+T16 human release gate
+        |
+       T17 --> T18 --> T19 --> T20
+                                 |
+                                Checkpoint F
+                                 |
+               T21 --> T22 --> T23 --> T24
+                                         |
+                                        Checkpoint G
+                                         |
+                               T25 --> T26 --> T27
+```
+
+## Post-v0.2 open questions
+
+- Phase 7 recommendation is range selection first; ref selection may be reduced
+  to resolving a ref into an immutable oid if moving-ref semantics are not wanted.
+- MCP resource subscriptions are deferred until tool/resource parity is proven.
+- Public repository visibility is optional and must not be inferred from npm or
+  release readiness.

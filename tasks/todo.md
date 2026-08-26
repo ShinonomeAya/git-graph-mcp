@@ -469,3 +469,334 @@ changing Git history.
 - [ ] T14–T16 acceptance criteria pass.
 - [ ] No high-severity dependency findings remain.
 - [ ] No external release mutation occurs without explicit approval.
+
+## T17: Add selection schema v2 with compatible reads
+
+**Description:** Extend the persisted selection contract from one commit to a
+typed commit, range, or ref selection without breaking existing schema v1 files.
+
+**Acceptance criteria:**
+
+- [x] v1 files normalize in memory without being rewritten on read.
+- [x] v2 writes validate immutable oids and store ref name plus resolved oid.
+- [x] malformed, unsupported, moved-ref, and stale selections have distinct errors.
+
+**Verification:**
+
+- [x] `node --test test/unit/state.test.js test/integration/worktree-selection.test.js` passes.
+- [x] Before/after assertions prove reads do not change the selection file or Git state.
+
+**Dependencies:** T16 and explicit approval to start post-v0.2 development
+
+**Files likely touched:**
+
+- `src/state.js`
+- `SPEC-selection-state.md`
+- `test/unit/state.test.js`
+- `test/integration/worktree-selection.test.js`
+- `src/mcp.js`
+- `test/unit/mcp.test.js`
+
+**Estimated scope:** Medium (6 files)
+
+## T18: Add commit, range, and ref selection to the domain and CLI
+
+**Description:** Resolve and save one commit, two immutable range endpoints, or
+a full ref through typed CLI commands while preserving current commands.
+
+**Acceptance criteria:**
+
+- [ ] Range endpoints and refs resolve through Git and reject option-like revisions.
+- [ ] Existing `inspect`, `selected`, and `compare-selected` behavior remains compatible.
+- [ ] Machine commands emit one JSON document with schema version 2 selection data.
+
+**Verification:**
+
+- [ ] `node --test test/unit/git.test.js test/integration/cli-graph.test.js test/integration/git-repositories.test.js` passes.
+- [ ] Fixture snapshots prove all selection operations leave refs/index/worktree unchanged.
+
+**Dependencies:** T17
+
+**Files likely touched:**
+
+- `src/git.js`
+- `src/cli.js`
+- `test/unit/git.test.js`
+- `test/integration/cli-graph.test.js`
+- `test/integration/git-repositories.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T19: Add two-anchor and ref selection to the TUI
+
+**Description:** Let the user mark a range base, choose its endpoint, or resolve a
+visible ref while keeping navigation, cleanup, and plain fallback deterministic.
+
+**Acceptance criteria:**
+
+- [ ] The active selection mode and both range endpoints are visible before save.
+- [ ] Saving a range/ref writes exactly the v2 contract produced by the CLI.
+- [ ] Quit, resize, invalid ref, and empty-history paths restore terminal state.
+
+**Verification:**
+
+- [ ] `node --test test/unit/tui.test.js test/unit/graph.test.js test/integration/cli-graph.test.js` passes.
+- [ ] Manual Windows TTY check covers commit and range selection.
+
+**Dependencies:** T18
+
+**Files likely touched:**
+
+- `src/tui.js`
+- `src/graph.js`
+- `test/unit/tui.test.js`
+- `test/unit/graph.test.js`
+- `test/integration/cli-graph.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T20: Add a budgeted MCP context bundle
+
+**Description:** Add `git_context_bundle` so an AI can retrieve selection,
+repository status, graph neighborhood, comparison, changed files, and warnings
+through one bounded call.
+
+**Acceptance criteria:**
+
+- [ ] Results expose count/byte limits, provenance, generation time, and `truncated`.
+- [ ] Commit, range, stale, dirty, and divergent selections return distinct content.
+- [ ] Default results contain metadata/statistics only; patch content is explicit and bounded.
+
+**Verification:**
+
+- [ ] Unit tests cover budget calculations and deterministic truncation.
+- [ ] Official SDK integration verifies the new tool and unchanged existing seven tools.
+
+**Dependencies:** T19
+
+**Files likely touched:**
+
+- `src/context.js`
+- `src/git.js`
+- `src/mcp.js`
+- `test/unit/context.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## Checkpoint F: v0.3 context bundle
+
+- [ ] T17–T20 acceptance criteria pass.
+- [ ] TUI, CLI, and MCP return the same immutable selection oids.
+- [ ] v1 migration, worktrees, bundle budgets, and no-mutation snapshots pass.
+- [ ] Human approves the v0.3 public contract before Phase 8.
+
+## T21: Add selection and status MCP resources
+
+**Description:** Expose the default repository's selection and status as MCP
+resources while keeping tools as the compatibility path.
+
+**Acceptance criteria:**
+
+- [ ] Resource and tool payloads use the same schema and error rules.
+- [ ] Unsupported subscriptions are not advertised.
+- [ ] Clients without resource support retain the full tool workflow.
+
+**Verification:**
+
+- [ ] Official SDK lists and reads both resources over stdio.
+- [ ] Existing tool integration tests remain unchanged and pass.
+
+**Dependencies:** Checkpoint F
+
+**Files likely touched:**
+
+- `src/mcp.js`
+- `src/state.js`
+- `test/unit/mcp.test.js`
+- `test/integration/mcp-stdio.test.js`
+- `docs/CLAUDE_CODE.md`
+
+**Estimated scope:** Medium (5 files)
+
+## T22: Add bounded commit search and filters
+
+**Description:** Add paged search by ref, author, message, and time without
+overloading graph rendering or accepting shell fragments.
+
+**Acceptance criteria:**
+
+- [ ] Search has deterministic ordering, bounded page size, and an explicit cursor.
+- [ ] All filters are passed as Git argument-array values and reject invalid refs.
+- [ ] CLI/MCP results report whether more results exist.
+
+**Verification:**
+
+- [ ] Merge, unicode, no-result, invalid-filter, and multi-page fixtures pass.
+- [ ] Search leaves refs, index, worktree, and selection unchanged.
+
+**Dependencies:** T21
+
+**Files likely touched:**
+
+- `src/git.js`
+- `src/cli.js`
+- `src/mcp.js`
+- `test/integration/git-repositories.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T23: Add structured commit diff and file history
+
+**Description:** Provide read-only, path-limited commit diff metadata and file
+evolution so agents can answer code-history questions without arbitrary Git commands.
+
+**Acceptance criteria:**
+
+- [ ] Rename, binary, merge, initial-commit, deleted-file, and invalid-path cases are explicit.
+- [ ] Patch bodies are opt-in, byte-limited, and marked when truncated.
+- [ ] No tool accepts a free-form Git command.
+
+**Verification:**
+
+- [ ] Focused Git-domain and official MCP integration tests pass.
+- [ ] Source assertions and state snapshots prove no write command is reachable.
+
+**Dependencies:** T22
+
+**Files likely touched:**
+
+- `src/git.js`
+- `src/mcp.js`
+- `test/unit/git.test.js`
+- `test/integration/git-repositories.test.js`
+- `test/integration/mcp-stdio.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T24: Establish and enforce large-repository budgets
+
+**Description:** Measure first graph, search, diff, memory, timeout, and output size
+on repeatable large fixtures, then optimize only failed paths.
+
+**Acceptance criteria:**
+
+- [ ] Benchmarks define reproducible budgets without using the development repo.
+- [ ] Slow Git processes time out or cancel with stable errors and no orphan process.
+- [ ] Caching/async changes are added only when a recorded budget is missed.
+
+**Verification:**
+
+- [ ] Benchmark smoke and timeout/cancellation integration tests pass on Windows/Linux.
+- [ ] `npm run check` remains deterministic and does not include long benchmarks.
+
+**Dependencies:** T23
+
+**Files likely touched:**
+
+- `scripts/benchmark-large-repo.js`
+- `src/git.js`
+- `test/integration/git-repositories.test.js`
+- `package.json`
+- `docs/TEST_PLAN.md`
+
+**Estimated scope:** Medium (5 files)
+
+## Checkpoint G: v0.4 read-only exploration
+
+- [ ] T21–T24 acceptance criteria pass.
+- [ ] Search/diff/file history are deterministic and bounded.
+- [ ] Resources and tools remain schema-compatible.
+- [ ] No database, daemon, HTTP listener, or new write action exists.
+
+## T25: Bind action plans to repository state
+
+**Description:** Add a plan receipt containing expected HEAD/index/status
+fingerprints so a later approved action fails closed if the repo changed.
+
+**Acceptance criteria:**
+
+- [ ] Every plan has an id, creation time, expiry, repo root, and state fingerprint.
+- [ ] Revalidation distinguishes expired, stale, dirty-changed, and ref-moved plans.
+- [ ] This task adds no destructive executor.
+
+**Verification:**
+
+- [ ] Unit and integration tests mutate each fingerprint component and observe rejection.
+- [ ] Existing branch creation remains idempotent and reset remains plan-only.
+
+**Dependencies:** Checkpoint G
+
+**Files likely touched:**
+
+- `src/actions.js`
+- `src/state.js`
+- `src/mcp.js`
+- `test/unit/actions.test.js`
+- `test/integration/safe-actions.test.js`
+
+**Estimated scope:** Medium (5 files)
+
+## T26: Add a local doctor command
+
+**Description:** Diagnose Node, Git, repository resolution, package version, MCP
+configuration, and stdio handshake without exposing secrets or changing state.
+
+**Acceptance criteria:**
+
+- [ ] `doctor` emits concise human output and optional structured JSON.
+- [ ] Checks distinguish missing runtime, invalid repo, stale config, and MCP failure.
+- [ ] Diagnostics redact paths/config values according to the existing policy.
+
+**Verification:**
+
+- [ ] CLI fixtures cover healthy and failing environments.
+- [ ] Packaged install runs `doctor` successfully on Windows and Ubuntu.
+
+**Dependencies:** T25
+
+**Files likely touched:**
+
+- `src/cli.js`
+- `src/diagnostics.js`
+- `test/integration/cli-graph.test.js`
+- `scripts/package-install.test.js`
+- `README.md`
+
+**Estimated scope:** Medium (5 files)
+
+## T27: Complete conditional public-release readiness
+
+**Description:** Prepare a demo, capability matrix, security policy, contribution
+guide, and release checklist without changing repository visibility or publishing.
+
+**Acceptance criteria:**
+
+- [ ] Public claims map to tests or captured manual evidence.
+- [ ] Security reporting and contribution boundaries are documented.
+- [ ] Visibility, version, tag, release, and npm publish remain separate approvals.
+
+**Verification:**
+
+- [ ] Public-path and package allowlist scans pass.
+- [ ] README install commands pass from a clean packed artifact.
+
+**Dependencies:** T26
+
+**Files likely touched:**
+
+- `README.md`
+- `SECURITY.md`
+- `CONTRIBUTING.md`
+- `docs/COMPETITIVE_ANALYSIS_AND_ROADMAP.md`
+- `docs/RELEASE_CANDIDATE.md`
+
+**Estimated scope:** Medium (5 files)
+
+## Checkpoint H: v0.5 productization
+
+- [ ] T25–T27 acceptance criteria pass.
+- [ ] Stale action plans fail closed and no destructive executor exists.
+- [ ] Clean-install onboarding completes graph → select → MCP read.
+- [ ] Human separately decides public visibility, version, tag, release, and npm publication.
