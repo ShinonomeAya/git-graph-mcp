@@ -47,7 +47,7 @@ Current CLI:
 - `inspect <commit>`: inspect and save selected commit.
 - `status`: compact repo status JSON.
 
-Planned MCP tools:
+MCP tools:
 
 - `git_graph(repo, limit)`: return graph rows and commit metadata.
 - `git_selected(repo)`: return current selected commit context.
@@ -73,14 +73,12 @@ Destructive actions must require explicit confirmation:
 
 Before destructive history movement, the tool should suggest creating a backup branch at the current HEAD.
 
-## Near-Term Build Order
+## Post-v0.2 Follow-up Ideas
 
 1. Add branch and lane selection, not only commit selection.
-2. Add safe branch creation.
-3. Add reset preview.
-4. Improve TUI details panel for selected commit.
-5. Add optional SDK-backed MCP transport if dependency installation is acceptable.
-6. Package as an npm CLI.
+2. Improve the TUI details panel for selected commits.
+3. Add optional hosted transport only after a separate security review.
+4. Extend package and CI coverage without weakening the read-only safety boundary.
 
 ## Open Product Questions
 

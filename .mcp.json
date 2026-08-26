@@ -2,11 +2,8 @@
   "mcpServers": {
     "git-graph": {
       "type": "stdio",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": [
-        "F:\\sokusai\\My project\\git-graph-mcp\\bin\\git-graph-mcp.js",
-        "mcp"
-      ]
+      "command": "node",
+      "args": ["./bin/git-graph-mcp.js", "mcp"]
     }
   }
 }

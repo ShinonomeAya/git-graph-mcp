@@ -1,98 +1,80 @@
 # git-graph-mcp
 
-Terminal Git graph for AI coding tools.
+`git-graph-mcp` is a terminal-first Git history viewer and local stdio MCP
+server for Claude Code and other AI coding tools. It lets a developer inspect
+history, save one commit as shared context, compare it with `HEAD`, create a
+new branch safely, and preview reset effects without executing reset.
 
-The goal is to give Claude Code, Codex, and other terminal-first AI coding agents a fast visual Git graph that works where the agent already lives: inside the terminal. The user can select a commit or branch line, then the AI can read that selected context and suggest safe Git actions such as comparing, branching, or reset planning.
+## Quick start
 
-## Current MVP
+Requirements: Git on `PATH` and Node.js 22 or newer.
 
-- Zero-dependency Node.js CLI.
-- Reads real Git history with `git log --topo-order`.
-- Renders a terminal commit graph.
-- Supports keyboard selection in TUI mode.
-- Writes the selected commit context to `.git/git-graph-mcp-selection.json`.
-- Compares the selected commit with `HEAD` for AI reset/branch planning.
-- Exposes machine-readable commands for AI tools.
+From a source checkout:
 
-## Usage
-
-From this project directory:
-
-```bash
-node ./bin/git-graph-mcp.js graph --repo /path/to/repo
+```powershell
+npm ci
+npm run check
+node .\bin\git-graph-mcp.js graph --plain
 ```
 
-Static output:
+From an installed package:
 
-```bash
-node ./bin/git-graph-mcp.js graph --repo /path/to/repo --plain
-```
-
-Read the current AI selection:
-
-```bash
-node ./bin/git-graph-mcp.js selected --repo /path/to/repo
-```
-
-Compare the current selection with `HEAD`:
-
-```bash
-node ./bin/git-graph-mcp.js compare-selected --repo /path/to/repo
-```
-
-Inspect and select a commit directly:
-
-```bash
-node ./bin/git-graph-mcp.js inspect <commit> --repo /path/to/repo
-```
-
-Get compact status:
-
-```bash
-node ./bin/git-graph-mcp.js status --repo /path/to/repo
-```
-
-Run as a Claude Code MCP server:
-
-```bash
-node ./bin/git-graph-mcp.js mcp
+```powershell
+npx git-graph-mcp graph --plain
+npx git-graph-mcp mcp
 ```
 
 See [docs/CLAUDE_CODE.md](docs/CLAUDE_CODE.md) for Claude Code setup.
+
+## CLI commands
+
+| Command | Purpose |
+|---|---|
+| `node .\bin\git-graph-mcp.js graph` | Interactive graph when a TTY is available |
+| `node .\bin\git-graph-mcp.js graph --plain` | Deterministic plain graph |
+| `node .\bin\git-graph-mcp.js status` | Structured branch and working-tree status |
+| `node .\bin\git-graph-mcp.js inspect <commit>` | Inspect and save a commit selection |
+| `node .\bin\git-graph-mcp.js selected` | Read the saved selection |
+| `node .\bin\git-graph-mcp.js compare-selected` | Compare the selection with `HEAD` |
+| `node .\bin\git-graph-mcp.js mcp` | Start the stdio MCP server |
+
+Add `--repo <path>` to CLI commands when the target repository is not the
+current directory.
+
+## MCP tools
+
+- `git_graph` — return graph text and structured commit metadata.
+- `git_status` — return compact and structured status.
+- `git_selected` — read the current selection.
+- `git_inspect_commit` — inspect and save a selection.
+- `git_compare_selected_with_head` — classify the relationship with `HEAD`.
+- `git_create_branch_at_selected` — create a new local branch at the selected oid, idempotently.
+- `git_reset_plan` — describe soft, mixed, or hard reset effects without invoking `git reset`.
+
+Successful results use `schemaVersion: 1`; expected failures use a stable
+error code. The branch action never checks out or force-moves a branch. Reset
+planning is read-only and always sets
+`requiresExplicitExternalExecution: true`.
 
 ## TUI keys
 
 - `Up` / `k`: move up
 - `Down` / `j`: move down
-- `Enter`: inspect and save selected commit
-- `s`: save selected commit
-- `q`: quit
+- `Enter` or `s`: inspect and save the selected commit
+- `q`: quit and restore the terminal state
 
-## Product Direction
+## Safety model
 
-Phase 1: terminal-first graph and selection state.
+The default workflow is read-only. Selection state is stored through Git's
+resolved path so linked worktrees remain isolated. A branch action revalidates
+the selected oid and refuses to move an existing branch. Reset plans report
+the relationship, dirty-state warnings, index/worktree impact, exact proposed
+command, and an informational backup-branch suggestion; no reset is executed
+by v0.2 code.
 
-Phase 2: MCP server tools:
+## Diagnostics
 
-- `git_graph`: return commit graph JSON.
-- `git_selected`: return the user's selected commit.
-- `git_compare_selected_with_head`: return diff summary.
-- `git_inspect_commit`: inspect a commit and save it as selection.
-- `git_create_branch_at_selected`: safe branch creation.
-- `git_reset_plan`: preview soft/mixed/hard reset impact without executing.
-
-Phase 3: optional Git actions with confirmation:
-
-- checkout branch or detached commit
-- create branch from selected commit
-- soft reset to selected commit
-- hard reset only with explicit user confirmation and backup branch suggestion
-
-Phase 4: optional Web UI for larger diff review, while keeping the terminal TUI as the primary workflow.
-
-## Safety Principles
-
-- Start read-only.
-- Any destructive Git operation must be previewed.
-- Reset and checkout flows should explain what will happen to commits, index, and working tree.
-- Prefer creating a backup branch before destructive history movement.
+Normal execution creates no log file and MCP stdout remains protocol-only. Set
+`GIT_GRAPH_MCP_DEBUG=1` temporarily to emit concise lifecycle messages on
+stderr. The diagnostics intentionally omit repository paths, request
+arguments, patch content, and environment dumps.

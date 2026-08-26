@@ -175,3 +175,51 @@ Each task is done only when its acceptance criteria and focused verification pas
 ## Open questions
 
 None block implementation. Publication ownership, registry metadata, and post-v0.2 features remain explicitly deferred.
+
+## Phase 6: Release-candidate handoff (current)
+
+The implementation is feature-complete for v0.2, but the release gate remains
+open until maintained-runtime CI evidence and explicit release approval exist.
+This phase prepares the candidate without changing Git history or publishing.
+
+### T14 — Execute the local release preflight
+
+**Acceptance criteria:**
+
+- [ ] Full repository checks, clean package installation, official-registry
+  production audit, package allowlist, and machine-path scan pass together.
+- [ ] Candidate changelog and rollback notes describe only verified behavior.
+- [ ] Working-tree changes remain uncommitted and no release artifact is pushed.
+
+**Verification:**
+
+- `npm ci`, `npm run check`, `npm run test:package-install`;
+- `npm audit --registry=https://registry.npmjs.org --omit=dev --audit-level=high`;
+- `npm pack --dry-run --json`, `git diff --check`, and the public-path scan.
+
+### T15 — Obtain maintained-runtime CI evidence
+
+**Acceptance criteria:**
+
+- [ ] Windows Node 22, Windows Node 24, Ubuntu Node 22, and Ubuntu Node 24
+  all complete `npm ci`, the production audit, and `npm run check`.
+- [ ] CI results are attached to the candidate review; failures block release.
+
+**Dependency:** T14 and an exact user-approved Git remote.
+
+### T16 — Human release gate
+
+**Acceptance criteria:**
+
+- [ ] User approves the candidate version (`0.2.0`) and release notes.
+- [ ] User separately approves commit, tag, push, and npm publication actions.
+- [ ] A reversible release/rollback window and first-hour verification owner are
+  identified before any external mutation.
+
+**Dependency:** T15.
+
+## Phase 6 checkpoint: v0.2 release-ready, not yet released
+
+- [ ] T14–T16 acceptance criteria pass.
+- [ ] No unreviewed high-severity dependency findings remain.
+- [ ] No publish, tag, push, or release occurs without explicit approval.

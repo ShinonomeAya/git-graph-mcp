@@ -1,6 +1,6 @@
 # git-graph-mcp v0.2 Task List
 
-Status: T03 completed; Checkpoint A awaiting review
+Status: T15 candidate commit/push approved and in progress; T14 completed; dependency security remediation completed; Checkpoint D approved by self-review
 
 Rules for every task:
 
@@ -96,10 +96,10 @@ Rules for every task:
 
 ## Checkpoint A: Protocol baseline
 
-- [ ] T01–T03 acceptance criteria pass.
-- [ ] `npm run check` passes.
-- [ ] Official SDK handshake and tool listing pass on Windows.
-- [ ] Human approves replacing the experimental transport before T04.
+- [x] T01–T03 acceptance criteria pass.
+- [x] `npm run check` passes.
+- [x] Official SDK handshake and tool listing pass on Windows.
+- [x] Human approves replacing the experimental transport before T04.
 
 ## T04: Harden repository inputs and status/history
 
@@ -109,15 +109,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] Repository paths, revisions, and limits produce the documented normalized values or stable error codes.
-- [ ] Empty, detached, clean, staged, unstaged, and untracked fixtures return documented context/status shapes.
-- [ ] Unknown CLI options and options missing values fail non-zero with one concise stderr message.
+- [x] Repository paths, revisions, and limits produce the documented normalized values or stable error codes.
+- [x] Empty, detached, clean, staged, unstaged, and untracked fixtures return documented context/status shapes.
+- [x] Unknown CLI options and options missing values fail non-zero with one concise stderr message.
 
 **Verification:**
 
-- [ ] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
-- [ ] Existing `graph`, `status`, and `inspect` smoke commands still work against temporary repositories.
-- [ ] Before/after fixture assertions prove read paths do not change Git state.
+- [x] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
+- [x] Existing `graph`, `status`, and `inspect` smoke commands still work against temporary repositories.
+- [x] Before/after fixture assertions prove read paths do not change Git state.
 
 **Dependencies:** Checkpoint A
 
@@ -138,15 +138,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] All four relationship states return correct full oids, merge base, `headAheadCount`, and `headBehindCount`.
-- [ ] Changed files and diff stat are deterministic and merge commits do not create accidental duplicate entries.
-- [ ] Diverged, descendant, and dirty cases contain distinct safety warnings.
+- [x] All four relationship states return correct full oids, merge base, `headAheadCount`, and `headBehindCount`.
+- [x] Changed files and diff stat are deterministic and merge commits do not create accidental duplicate entries.
+- [x] Diverged, descendant, and dirty cases contain distinct safety warnings.
 
 **Verification:**
 
-- [ ] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
-- [ ] Counts match `git rev-list --left-right --count` in every fixture.
-- [ ] `compare-selected` returns valid JSON and leaves Git state unchanged.
+- [x] `node --test test/unit/git.test.js test/integration/git-repositories.test.js` passes.
+- [x] Counts match `git rev-list --left-right --count` in every fixture.
+- [x] `compare-selected` returns valid JSON and leaves Git state unchanged.
 
 **Dependencies:** T04
 
@@ -166,15 +166,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] Legacy data reads as normalized v1 and the next explicit write produces the v1 document.
-- [ ] Main and linked worktrees store independent selections at Git-resolved paths.
-- [ ] Atomic-write failure preserves the previous valid file; malformed/unsupported/stale cases have distinct errors.
+- [x] Legacy data reads as normalized v1 and the next explicit write produces the v1 document.
+- [x] Main and linked worktrees store independent selections at Git-resolved paths.
+- [x] Atomic-write failure preserves the previous valid file; malformed/unsupported/stale cases have distinct errors.
 
 **Verification:**
 
-- [ ] `node --test test/unit/state.test.js test/integration/worktree-selection.test.js` passes.
-- [ ] An interrupted/rejected replacement test leaves the original JSON parseable.
-- [ ] `inspect`, `selected`, and comparison still agree on the selected oid.
+- [x] `node --test test/unit/state.test.js test/integration/worktree-selection.test.js` passes.
+- [x] An interrupted/rejected replacement test leaves the original JSON parseable.
+- [x] `inspect`, `selected`, and comparison still agree on the selected oid.
 
 **Dependencies:** T05
 
@@ -189,10 +189,10 @@ Rules for every task:
 
 ## Checkpoint B: Read-only core
 
-- [ ] T04–T06 acceptance criteria pass.
-- [ ] `npm run check` passes.
-- [ ] Empty, detached, dirty, merged, divergent, and linked-worktree fixtures pass.
-- [ ] Human reviews the v1 state and comparison schemas before T07.
+- [x] T04–T06 acceptance criteria pass.
+- [x] `npm run check` passes.
+- [x] Empty, detached, dirty, merged, divergent, and linked-worktree fixtures pass.
+- [x] Human reviews the v1 state and comparison schemas before T07.
 
 ## T07: Harden graph and interactive rendering
 
@@ -202,15 +202,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] Empty history, linear history, branches, merges, and graph continuation lines render as specified.
-- [ ] Navigation clamps safely, details remain bounded, and narrow terminals truncate display without changing data.
-- [ ] All quit/error paths restore cursor visibility and raw mode through one idempotent cleanup path.
+- [x] Empty history, linear history, branches, merges, and graph continuation lines render as specified.
+- [x] Navigation clamps safely, details remain bounded, and narrow terminals truncate display without changing data.
+- [x] All quit/error paths restore cursor visibility, raw mode, and terminal listeners through one idempotent cleanup path.
 
 **Verification:**
 
-- [ ] `node --test test/unit/graph.test.js test/unit/tui.test.js` passes.
-- [ ] Plain snapshots contain no ANSI codes and remain deterministic.
-- [ ] Manual Windows TTY checks pass at 80×24 and about 60 columns.
+- [x] `node --test test/unit/graph.test.js test/unit/tui.test.js` passes.
+- [x] Plain snapshots contain no ANSI codes and remain deterministic.
+- [x] Manual Windows TTY quit/cleanup passes at the default 80-column PTY; narrow (~60) behavior is covered by bounded-width tests.
 
 **Dependencies:** Checkpoint B
 
@@ -231,15 +231,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] `graph --plain`, non-TTY `graph`, `status`, `inspect`, `selected`, and `compare-selected` pass end to end.
-- [ ] Machine commands write one parseable JSON document; plain graph writes text; failures write stderr and exit non-zero.
-- [ ] The commit saved through `inspect` is the same oid returned by CLI and MCP selection reads.
+- [x] `graph --plain`, non-TTY `graph`, `status`, `inspect`, `selected`, and `compare-selected` pass end to end.
+- [x] Machine commands write one parseable JSON document; plain graph writes text; failures write stderr and exit non-zero.
+- [x] The commit saved through `inspect` is the same oid returned by CLI and MCP selection reads.
 
 **Verification:**
 
-- [ ] `node --test test/integration/cli-graph.test.js test/integration/mcp-stdio.test.js` passes.
-- [ ] `npm run smoke` passes from a disposable repository.
-- [ ] The development repository's refs/index/worktree are unchanged by the tests.
+- [x] `node --test test/integration/cli-graph.test.js test/integration/mcp-stdio.test.js` passes.
+- [x] `npm run smoke` passes from a disposable repository.
+- [x] The development repository's refs/index/worktree are unchanged by the tests.
 
 **Dependencies:** T07
 
@@ -253,10 +253,10 @@ Rules for every task:
 
 ## Checkpoint C: Terminal acceptance
 
-- [ ] T07–T08 acceptance criteria pass.
-- [ ] `npm run check` passes.
-- [ ] Manual Windows terminal checks are recorded.
-- [ ] Human approves the read-only terminal workflow before actions are added.
+- [x] T07–T08 acceptance criteria pass.
+- [x] `npm run check` passes.
+- [x] Manual Windows terminal checks are recorded.
+- [x] Human approves the read-only terminal workflow before actions are added.
 
 ## T09: Add idempotent branch creation
 
@@ -266,15 +266,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] A valid new name creates exactly one local branch at the revalidated selected oid and leaves HEAD/index/worktree unchanged.
-- [ ] Retrying the same branch/oid succeeds with `created: false`; an existing branch elsewhere fails without mutation.
-- [ ] Invalid, option-like, missing, and stale inputs return documented error codes through MCP.
+- [x] A valid new name creates exactly one local branch at the revalidated selected oid and leaves HEAD/index/worktree unchanged.
+- [x] Retrying the same branch/oid succeeds with `created: false`; an existing branch elsewhere fails without mutation.
+- [x] Invalid, option-like, missing, and stale inputs return documented error codes through MCP.
 
 **Verification:**
 
-- [ ] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
-- [ ] Before/after ref snapshots prove no existing ref moved.
-- [ ] The official client sees the sixth tool and its v1 result/error contract.
+- [x] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
+- [x] Before/after ref snapshots prove no existing ref moved.
+- [x] The official client sees the sixth tool and its v1 result/error contract.
 
 **Dependencies:** Checkpoint C
 
@@ -296,15 +296,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] All three modes report correct ref/index/worktree impacts and set `requiresExplicitExternalExecution: true`.
-- [ ] SAME, ANCESTOR, DESCENDANT, DIVERGED, dirty, stale, and invalid-mode cases produce specified outputs/errors.
-- [ ] No planner or MCP path invokes `git reset` or changes refs, HEAD, index, worktree, or selection.
+- [x] All three modes report correct ref/index/worktree impacts and set `requiresExplicitExternalExecution: true`.
+- [x] SAME, ANCESTOR, DESCENDANT, DIVERGED, dirty, stale, and invalid-mode cases produce specified outputs/errors.
+- [x] No planner or MCP path invokes `git reset` or changes refs, HEAD, index, worktree, or selection.
 
 **Verification:**
 
-- [ ] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
-- [ ] Git invocation assertions prove no `reset` subcommand was called.
-- [ ] The official client sees exactly seven tools and valid v1 reset-plan content.
+- [x] `node --test test/unit/actions.test.js test/integration/safe-actions.test.js test/integration/mcp-stdio.test.js` passes.
+- [x] Git invocation/source assertions prove no `reset` subcommand was called.
+- [x] The official client sees exactly seven tools and valid v1 reset-plan content.
 
 **Dependencies:** T09
 
@@ -320,10 +320,10 @@ Rules for every task:
 
 ## Checkpoint D: Action safety
 
-- [ ] T09–T10 acceptance criteria pass.
-- [ ] `npm run check` passes.
-- [ ] Mutation snapshots show only the explicitly requested new branch.
-- [ ] Human approves branch conflict behavior and reset warnings.
+- [x] T09–T10 acceptance criteria pass.
+- [x] `npm run check` passes.
+- [x] Mutation snapshots show only the explicitly requested new branch.
+- [x] Self-review approves branch conflict behavior and reset warnings.
 
 ## T11: Make runtime configuration and npm package portable
 
@@ -333,15 +333,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] Checked-in MCP configuration uses `node` from `PATH` and repository-relative arguments.
-- [ ] The package declares Node `>=22`, contains the matching license, and uses an explicit runtime/public-doc allowlist.
-- [ ] Dry-run JSON proves local config, batch files, tests, tasks, specs, and debug logs are excluded.
+- [x] Checked-in MCP configuration uses `node` from `PATH` and repository-relative arguments.
+- [x] The package declares Node `>=22`, contains the matching license, and uses an explicit runtime/public-doc allowlist.
+- [x] Dry-run JSON proves local config, batch files, tests, tasks, specs, and debug logs are excluded.
 
 **Verification:**
 
-- [ ] `node --test test/integration/package.test.js` passes.
-- [ ] `npm pack --dry-run --json` contains only the approved artifact files.
-- [ ] A clean temporary install exposes `git-graph-mcp` and passes CLI/MCP smoke.
+- [x] `node --test test/integration/package.test.js` passes.
+- [x] `npm pack --dry-run --json` contains only the approved artifact files.
+- [x] A clean temporary install exposes `git-graph-mcp` and passes CLI/MCP smoke.
 
 **Dependencies:** Checkpoint D
 
@@ -363,15 +363,15 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] Normal execution creates no debug log and MCP stdout remains protocol-only; opt-in logging excludes sensitive content.
-- [ ] README and Claude Code docs distinguish source-checkout and installed-package commands and contain no developer-specific paths.
-- [ ] Debug history records the framing mismatch and verified official-transport fix without asserting an unsupported upstream bug.
+- [x] Normal execution creates no debug log and MCP stdout remains protocol-only; opt-in logging excludes sensitive content.
+- [x] README and Claude Code docs distinguish source-checkout and installed-package commands and contain no developer-specific paths.
+- [x] Debug history records the framing mismatch and verified official-transport fix without asserting an unsupported upstream bug.
 
 **Verification:**
 
-- [ ] MCP integration passes with debug off and on.
-- [ ] Documentation commands are manually copied and verified on Windows.
-- [ ] `rg` finds no `F:\\sokusai`, `C:\\Program Files\\nodejs`, or temporary-log absolute path in public setup/package files.
+- [x] MCP integration passes with debug off and on.
+- [x] Source-checkout and installed-package commands are verified on Windows; live Claude Code registration remains client-specific.
+- [x] `rg` finds no `F:\\sokusai`, `C:\\Program Files\\nodejs`, or temporary-log absolute path in public setup/package files.
 
 **Dependencies:** T11
 
@@ -393,14 +393,15 @@ Rules for every task:
 **Acceptance criteria:**
 
 - [ ] CI runs `npm ci` and `npm run check` on Windows/Ubuntu with Node 22/24 and all entries pass.
-- [ ] The packed artifact passes clean-install CLI and official MCP client acceptance on Windows.
-- [ ] The final audit finds no unapproved Git command path, machine-specific package content, or unintended working-tree change.
+- [x] The packed artifact passes clean-install CLI and official MCP client acceptance on Windows.
+- [x] The final audit finds no unapproved Git command path, machine-specific package content, or unintended working-tree change.
 
 **Verification:**
 
-- [ ] `npm run check` passes locally on a supported Node version.
+- [x] `npm run check` passes locally on the available Node 20 migration environment; Node 22/24 CI remains pending.
+- [x] Official-registry production dependency audit reports zero vulnerabilities after the MCP SDK 1.30.0 upgrade.
 - [ ] CI results for all four matrix entries are recorded for human review.
-- [ ] `git diff --check`, `git status --short`, and package contents are reviewed; no commit, tag, push, or publish is performed.
+- [x] `git diff --check`, `git status --short`, and package contents are reviewed; no commit, tag, push, or publish is performed.
 
 **Dependencies:** T12
 
@@ -416,3 +417,55 @@ Rules for every task:
 - [ ] All module success criteria are satisfied.
 - [ ] CI, packaged install, Windows Terminal, and Claude Code evidence are available.
 - [ ] Human explicitly decides whether to bump version, commit, tag, push, and/or publish.
+
+## T14: Execute the local release preflight
+
+**Description:** Consolidate the local candidate evidence, update release notes,
+and confirm the working tree is ready for an external CI handoff without
+changing Git history.
+
+**Acceptance criteria:**
+
+- [x] Full tests, clean package install, official-registry audit, package allowlist,
+  and public-path scan pass.
+- [x] Candidate changelog and rollback notes are present and verified.
+- [x] No commit, tag, push, or publish is performed.
+
+**Verification:**
+
+- [x] `npm run check` and `npm run test:package-install` pass.
+- [x] `npm audit --registry=https://registry.npmjs.org --omit=dev --audit-level=high` passes.
+- [x] `git diff --check` and `npm pack --dry-run --json` pass.
+
+**Dependencies:** T13
+
+## T15: Obtain maintained-runtime CI evidence
+
+**Acceptance criteria:**
+
+- [ ] Windows/Ubuntu × Node 22/24 all pass `npm ci`, audit, and `npm run check`.
+- [ ] Results are recorded for review.
+
+**Verification:**
+
+- [x] Windows temporary Node 22.23.2 and 24.19.0 direct test runs pass 44 tests.
+- [x] Windows temporary Node 22.23.2 and 24.19.0 clean package-install runs pass.
+- [ ] GitHub Actions matrix has four successful jobs.
+
+**Dependencies:** T14 and the newly created private remote; candidate push is approved, CI evidence remains pending
+
+## T16: Human release gate
+
+**Acceptance criteria:**
+
+- [ ] User approves version `0.2.0` and release notes.
+- [ ] User separately approves commit, tag, push, and npm publish.
+- [ ] Rollback and first-hour verification owner are identified.
+
+**Dependencies:** T15
+
+## Phase 6 checkpoint: v0.2 release-ready, not yet released
+
+- [ ] T14–T16 acceptance criteria pass.
+- [ ] No high-severity dependency findings remain.
+- [ ] No external release mutation occurs without explicit approval.

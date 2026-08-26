@@ -9,94 +9,176 @@ const SHOW_CURSOR = "\x1b[?25h";
 const INVERT = "\x1b[7m";
 const RESET = "\x1b[0m";
 const DIM = "\x1b[2m";
+const ANSI_PATTERN = /\x1b\[[0-?]*[ -/]*[@-~]/g;
 
 async function runTui(context, rows) {
+  const visibleRows = Array.isArray(rows) ? rows : [];
+  if (visibleRows.length === 0) {
+    process.stdout.write(CLEAR);
+    process.stdout.write(renderStaticGraph(context, visibleRows, -1, "No commits yet.", false));
+    process.stdout.write("\n");
+    return;
+  }
+
   let selected = 0;
   let message = "Enter: inspect/select  j/k or arrows: move  s: save  q: quit";
-
-  readline.emitKeypressEvents(process.stdin);
-  if (process.stdin.isTTY) process.stdin.setRawMode(true);
-  process.stdout.write(HIDE_CURSOR);
+  let cleaned = false;
+  let onKeypress;
+  let onSigint;
 
   const cleanup = () => {
+    if (cleaned) return;
+    cleaned = true;
+    if (onKeypress) process.stdin.off("keypress", onKeypress);
+    if (onSigint) process.off("SIGINT", onSigint);
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
+    if (typeof process.stdin.pause === "function") process.stdin.pause();
     process.stdout.write(SHOW_CURSOR);
   };
 
   const render = () => {
     process.stdout.write(CLEAR);
-    process.stdout.write(renderStaticGraph(context, rows, selected, message, true));
+    process.stdout.write(renderStaticGraph(context, visibleRows, selected, message, true));
   };
 
   const selectCurrent = () => {
-    const commit = rows[selected] && rows[selected].commit;
+    const commit = visibleRows[selected] && visibleRows[selected].commit;
     if (!commit) return;
     const selection = readCommit(context.root, commit.hash);
     writeSelection(context.root, selection);
     message = `Selected ${commit.shortHash}: ${commit.subject}`;
   };
 
-  render();
+  const finish = () => {
+    cleanup();
+    process.stdout.write("\n");
+  };
 
-  await new Promise((resolve) => {
-    process.stdin.on("keypress", (_input, key) => {
-      if (!key) return;
+  try {
+    readline.emitKeypressEvents(process.stdin);
+    if (process.stdin.isTTY) process.stdin.setRawMode(true);
+    process.stdout.write(HIDE_CURSOR);
+    render();
+
+    onSigint = finish;
+    process.once("SIGINT", onSigint);
+    onKeypress = (_input, key) => {
+      if (!key || cleaned) return;
 
       if (key.name === "q" || (key.ctrl && key.name === "c")) {
-        cleanup();
-        process.stdout.write("\n");
-        resolve();
+        finish();
         return;
       }
 
       if (key.name === "up" || key.name === "k") {
-        selected = Math.max(0, selected - 1);
+        selected = moveSelection(selected, -1, visibleRows.length);
       } else if (key.name === "down" || key.name === "j") {
-        selected = Math.min(rows.length - 1, selected + 1);
+        selected = moveSelection(selected, 1, visibleRows.length);
       } else if (key.name === "return" || key.name === "s") {
-        selectCurrent();
+        try {
+          selectCurrent();
+        } catch (error) {
+          message = error && error.message ? error.message : "Could not save selection.";
+        }
       }
 
       render();
+    };
+    process.stdin.on("keypress", onKeypress);
+
+    await new Promise((resolve) => {
+      const waitForCleanup = () => {
+        if (cleaned) {
+          resolve();
+          return;
+        }
+        setImmediate(waitForCleanup);
+      };
+      waitForCleanup();
     });
-  });
+  } catch (error) {
+    cleanup();
+    throw error;
+  }
 }
 
-function renderStaticGraph(context, rows, selectedIndex, footer, color) {
-  const visibleRows = pickWindow(rows, selectedIndex, terminalHeight() - 5);
+function renderStaticGraph(context, rows, selectedIndex = 0, footer, color = false, options = {}) {
+  const visibleRows = Array.isArray(rows) ? rows : [];
+  const width = options.width || terminalWidth();
+  const height = options.height || terminalHeight();
+  const selected = selectedIndex >= 0 && selectedIndex < visibleRows.length ? selectedIndex : -1;
+  const windowRows = pickWindow(visibleRows, selected, height - 8);
   const dim = color ? DIM : "";
-  const invert = color ? INVERT : "";
   const reset = color ? RESET : "";
   const lines = [
-    `git-graph-mcp  ${context.branch} @ ${context.head}`,
-    dim + context.root + reset,
+    truncateText(`git-graph-mcp  ${context.branch} @ ${context.head}`, width),
+    truncateText(`${dim}${context.root}${reset}`, width),
     "",
   ];
 
-  visibleRows.forEach(({ row, index }) => {
+  if (windowRows.length === 0) {
+    lines.push(truncateText("No commits yet.", width));
+  }
+
+  windowRows.forEach(({ row, index }) => {
     const commit = row.commit;
-    const refs = commit.refs.length ? ` ${dim}${commit.refs.join(", ")}${reset}` : "";
-    const marker = index === selectedIndex ? ">" : " ";
+    const refs = commit.refs && commit.refs.length ? ` ${commit.refs.join(", ")}` : "";
+    const marker = index === selected ? ">" : " ";
     const line = `${marker} ${renderLane(row).padEnd(12)} ${commit.shortHash}${refs}  ${commit.subject}`;
-    lines.push(index === selectedIndex ? invert + line + reset : line);
+    const displayLine = truncateText(line, width);
+    lines.push(index === selected && color ? `${INVERT}${displayLine}${RESET}` : displayLine);
     renderGraphAfter(row).forEach((graphLine) => {
-      lines.push(`  ${graphLine}`);
+      lines.push(truncateText(`  ${graphLine}`, width));
     });
   });
 
+  const selectedCommit = selected >= 0 && visibleRows[selected]
+    ? visibleRows[selected].commit
+    : null;
+  if (selectedCommit) {
+    lines.push("");
+    lines.push(truncateText(`Selected: ${selectedCommit.shortHash}`, width));
+    lines.push(truncateText(`Subject: ${selectedCommit.subject || ""}`, width));
+    lines.push(truncateText(`Refs: ${(selectedCommit.refs || []).join(", ") || "(none)"}`, width));
+    lines.push(truncateText(`Author: ${selectedCommit.author?.name || ""}`, width));
+    lines.push(truncateText(`Date: ${selectedCommit.date || ""}`, width));
+    lines.push(truncateText(`Parents: ${(selectedCommit.parents || []).length}`, width));
+  }
+
   lines.push("");
-  lines.push(dim + (footer || "Run without --plain for interactive TUI.") + reset);
+  lines.push(truncateText(dim + (footer || "Run without --plain for interactive TUI.") + reset, width));
   return lines.join("\n");
 }
 
+function moveSelection(current, direction, rowCount) {
+  if (!rowCount) return -1;
+  const start = Number.isInteger(current) ? current : 0;
+  return Math.max(0, Math.min(rowCount - 1, start + direction));
+}
+
 function pickWindow(rows, selectedIndex, height) {
-  const size = Math.max(5, height || 20);
+  const visibleRows = Array.isArray(rows) ? rows : [];
+  if (visibleRows.length === 0) return [];
+  const size = Math.max(5, Number.isInteger(height) ? height : 20);
+  const selected = Math.max(0, Math.min(visibleRows.length - 1, selectedIndex < 0 ? 0 : selectedIndex));
   const half = Math.floor(size / 2);
-  const start = Math.max(0, Math.min(selectedIndex - half, rows.length - size));
-  return rows.slice(start, start + size).map((row, offset) => ({
+  const start = Math.max(0, Math.min(selected - half, visibleRows.length - size));
+  return visibleRows.slice(start, start + size).map((row, offset) => ({
     row,
     index: start + offset,
   }));
+}
+
+function truncateText(value, width) {
+  const text = String(value ?? "");
+  const limit = Math.max(1, Number.isInteger(width) ? width : 80);
+  const visible = text.replace(ANSI_PATTERN, "");
+  if (visible.length <= limit) return text;
+  return `${visible.slice(0, Math.max(0, limit - 1))}…`;
+}
+
+function terminalWidth() {
+  return process.stdout.columns || 80;
 }
 
 function terminalHeight() {
@@ -104,6 +186,9 @@ function terminalHeight() {
 }
 
 module.exports = {
-  runTui,
+  moveSelection,
+  pickWindow,
   renderStaticGraph,
+  runTui,
+  truncateText,
 };

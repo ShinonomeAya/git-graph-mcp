@@ -1,65 +1,95 @@
 # Claude Code Setup
 
-`git-graph-mcp` exposes a local stdio MCP server for Claude Code.
+`git-graph-mcp` exposes a local stdio MCP server for Claude Code. The supported
+runtime is Node.js 22 or newer and Git must be available on `PATH`.
 
-## Option A: Project-scoped `.mcp.json`
+## Option A: Project-scoped source checkout
 
-This repository includes a `.mcp.json` that starts the server with:
+The repository includes a portable `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "git-graph": {
       "type": "stdio",
-      "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["F:\\sokusai\\My project\\git-graph-mcp\\bin\\git-graph-mcp.js", "mcp"]
+      "command": "node",
+      "args": ["./bin/git-graph-mcp.js", "mcp"]
     }
   }
 }
 ```
 
-When Claude Code opens this repository, it should prompt you to trust the project-scoped MCP server. After approval, run `/mcp` inside Claude Code and check that `git-graph` is connected.
-
-## Option B: Add It To Another Project
-
-From the project where you want Claude Code to use the graph tools:
+From the repository checkout, install dependencies and run the read-only
+checks before opening the project in Claude Code:
 
 ```powershell
-claude mcp add --transport stdio --scope local git-graph -- "C:\Program Files\nodejs\node.exe" "F:\sokusai\My project\git-graph-mcp\bin\git-graph-mcp.js" mcp
+npm ci
+npm run check
 ```
 
-Use `--scope user` instead of `--scope local` if you want the same server available across projects.
+When Claude Code opens the repository, approve the project-scoped server if
+prompted. Run `/mcp` and confirm that `git-graph` is connected.
+
+## Option B: Installed package
+
+After installing the package globally or using `npx`, add it from the project
+where it should run:
+
+```powershell
+claude mcp add --transport stdio --scope local git-graph -- npx git-graph-mcp mcp
+```
+
+For a source checkout in another project, replace the executable with
+`node <path-to-git-graph-mcp>\bin\git-graph-mcp.js mcp`.
 
 ## Tools
 
 - `git_graph`: show the commit graph and return structured commit metadata.
-- `git_status`: return compact branch and working tree status.
-- `git_selected`: return the commit selected in the TUI or by `git_inspect_commit`.
+- `git_status`: return compact branch and working-tree status.
+- `git_selected`: return the current saved selection.
 - `git_inspect_commit`: inspect a commit and save it as the current selection.
-- `git_compare_selected_with_head`: compare the selected commit with `HEAD` so Claude can plan branch or reset options.
+- `git_compare_selected_with_head`: compare the selection with `HEAD`.
+- `git_create_branch_at_selected`: create a new local branch at the selection; never move an existing branch.
+- `git_reset_plan`: preview soft, mixed, or hard reset impact; never execute reset.
 
-## Typical Claude Prompt
+All successful tool results contain `schemaVersion: 1`. Expected failures use
+`isError: true` with a stable error code.
+
+## Typical Claude prompt
 
 ```text
-Use git_graph to show me the current repository history. Then inspect the commit before the feature merge and compare it with HEAD. Tell me whether I should create a branch or reset, but do not run destructive Git commands.
+Use git_graph to show the current repository history. Inspect the commit before the feature merge, compare it with HEAD, and show a reset plan if useful. Do not execute reset, checkout, or any other destructive Git command.
 ```
 
-## Manual Verification
+## Manual verification
+
+From a source checkout:
 
 ```powershell
 node .\bin\git-graph-mcp.js graph --plain
 node .\bin\git-graph-mcp.js inspect HEAD
 node .\bin\git-graph-mcp.js selected
 node .\bin\git-graph-mcp.js compare-selected
+npm run check
 ```
 
-## Windows Stdio Timeout (Known Issue)
+For an installed package, use `npx git-graph-mcp mcp` in the MCP client and
+`npx git-graph-mcp graph --plain` for the CLI smoke check.
 
-On Windows, Claude Code currently has a bug reading stdout from stdio MCP servers, causing `connection timed out after 30000ms`. The server runs correctly and responds to requests, but Claude Code cannot read the response from the stdout pipe.
+## Troubleshooting stdio
 
-Workarounds:
+The historical Windows timeout came from an earlier custom transport that
+emitted `Content-Length`-framed messages. The current server uses the official
+SDK `StdioServerTransport`; the official SDK client integration passes on
+Windows and lists all seven tools.
 
-1. **Use SSE / HTTP transport (recommended)** — Instead of stdio, expose the MCP server over HTTP/SSE. Claude Code supports `type: "sse"` MCP servers and the connection works on Windows.
-2. **Wait for Claude Code update** — This is a known upstream issue. A future Claude Code release may fix stdio pipe reading on Windows.
-3. **Use WSL** — Run Claude Code inside WSL2. The stdio pipe behavior works correctly in the Linux environment.
-4. **Use another AI client** — Other MCP clients (e.g. Cline, Roo Code, Cursor with MCP support) may handle stdio correctly on Windows.
+If Claude Code still reports a connection failure:
+
+1. Check `node --version` (22 or newer) and `git --version`.
+2. Run `npm ci` and `npm run check` from the source checkout.
+3. Confirm `/mcp` shows the project server as connected.
+4. Set `GIT_GRAPH_MCP_DEBUG=1` only when diagnosing; concise lifecycle events
+   go to stderr and never to MCP stdout.
+
+This repository records the verified official-client result; it does not claim
+that every Claude Code release has identical Windows behavior.

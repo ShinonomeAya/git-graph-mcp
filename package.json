@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "description": "Terminal Git graph for AI coding tools, with AI-readable commit selection state.",
   "type": "commonjs",
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "git-graph-mcp": "./bin/git-graph-mcp.js"
   },
@@ -13,18 +19,20 @@
     "compare-selected": "node ./bin/git-graph-mcp.js compare-selected",
     "selected": "node ./bin/git-graph-mcp.js selected",
     "status": "node ./bin/git-graph-mcp.js status",
-    "check:syntax": "node --check ./bin/git-graph-mcp.js && node --check ./src/cli.js && node --check ./src/git.js && node --check ./src/graph.js && node --check ./src/mcp.js && node --check ./src/state.js && node --check ./src/tui.js",
-    "test:unit": "node --test test/unit",
-    "test:integration": "node --test test/integration",
-    "test": "node --test test",
+    "check:syntax": "node --check ./bin/git-graph-mcp.js && node --check ./src/actions.js && node --check ./src/cli.js && node --check ./src/diagnostics.js && node --check ./src/git.js && node --check ./src/graph.js && node --check ./src/mcp.js && node --check ./src/state.js && node --check ./src/tui.js",
+    "test:unit": "node --test test/unit/actions.test.js test/unit/git.test.js test/unit/graph.test.js test/unit/mcp.test.js test/unit/state.test.js test/unit/tui.test.js",
+    "test:integration": "node --test test/integration/cli-graph.test.js test/integration/git-repositories.test.js test/integration/mcp-stdio.test.js test/integration/package.test.js test/integration/safe-actions.test.js test/integration/worktree-selection.test.js",
+    "test:package": "node --test test/integration/package.test.js",
+    "test:package-install": "node --test scripts/package-install.test.js",
+    "test": "node --test test/unit/actions.test.js test/unit/git.test.js test/unit/graph.test.js test/unit/mcp.test.js test/unit/state.test.js test/unit/tui.test.js test/integration/cli-graph.test.js test/integration/git-repositories.test.js test/integration/mcp-stdio.test.js test/integration/package.test.js test/integration/safe-actions.test.js test/integration/worktree-selection.test.js",
     "smoke": "node ./bin/git-graph-mcp.js graph --plain --limit 8",
-    "check": "npm run check:syntax && npm test && npm run smoke && npm pack --dry-run"
+    "check": "npm run check:syntax && npm test && npm run smoke && npm run test:package"
   },
   "engines": {
     "node": ">=22"
   },
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0"
+    "@modelcontextprotocol/sdk": "^1.30.0"
   }
 }

@@ -1,7 +1,7 @@
-function buildGraphRows(commits) {
+function buildGraphRows(commits = []) {
   const lanes = [];
 
-  return commits.map((commit) => {
+  return (Array.isArray(commits) ? commits : []).map((commit) => {
     let lane = lanes.indexOf(commit.hash);
     if (lane === -1) {
       lane = lanes.length;
@@ -35,18 +35,18 @@ function buildGraphRows(commits) {
   });
 }
 
-function renderLane(row) {
-  if (row.commit.graphPrefix) {
+function renderLane(row = {}) {
+  if (row.commit && row.commit.graphPrefix) {
     return renderGitGraphPrefix(row.commit.graphPrefix, row.isMerge);
   }
 
   const cells = [];
-  const width = Math.max(row.width, row.lanes.length);
+  const width = Math.max(row.width || 0, (row.lanes || []).length, (row.lane || 0) + 1);
 
   for (let index = 0; index < width; index += 1) {
     if (index === row.lane) {
       cells.push(row.isMerge ? "◆" : "●");
-    } else if (row.lanes[index]) {
+    } else if (row.lanes && row.lanes[index]) {
       cells.push("│");
     } else {
       cells.push(" ");
@@ -57,7 +57,9 @@ function renderLane(row) {
 }
 
 function renderGraphAfter(row) {
-  return (row.commit.graphAfter || []).map((line) => renderGitGraphPrefix(line, false));
+  return row && row.commit
+    ? (row.commit.graphAfter || []).map((line) => renderGitGraphPrefix(line, false))
+    : [];
 }
 
 function renderGitGraphPrefix(prefix, isMerge) {

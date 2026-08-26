@@ -11,6 +11,11 @@ function commit(hash, parents = [], graphPrefix = "") {
   };
 }
 
+test("buildGraphRows returns an empty list for empty or invalid history", () => {
+  assert.deepEqual(buildGraphRows([]), []);
+  assert.deepEqual(buildGraphRows(null), []);
+});
+
 test("buildGraphRows keeps a linear history in one lane", () => {
   const rows = buildGraphRows([
     commit("a", ["b"]),

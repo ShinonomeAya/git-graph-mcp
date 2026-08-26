@@ -1,6 +1,16 @@
-const { compareWithHead, getGitContext, getGitStatus, readCommit } = require("./git");
+const { buildResetPlan, createBranchAtSelected } = require("./actions");
+const {
+  compareWithHead,
+  getGitContext,
+  getGitStatus,
+  normalizeLimit,
+  readCommit,
+  resolveRepo,
+} = require("./git");
 const { buildGraphRows, renderGraphAfter, renderLane } = require("./graph");
-const { readSelection, writeSelection } = require("./state");
+const { readSelection, resolveSelection, writeSelection } = require("./state");
+const { debugLog } = require("./diagnostics");
+const { version: SERVER_VERSION } = require("../package.json");
 
 const { Server } = require("@modelcontextprotocol/sdk/server/index.js");
 const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
@@ -12,7 +22,6 @@ const {
 } = require("@modelcontextprotocol/sdk/types.js");
 
 const SERVER_NAME = "git-graph";
-const SERVER_VERSION = "0.1.0";
 const SCHEMA_VERSION = 1;
 
 class ToolError extends Error {
@@ -24,6 +33,7 @@ class ToolError extends Error {
 }
 
 async function runMcpServer() {
+  debugLog("server starting");
   const server = new Server(
     { name: SERVER_NAME, version: SERVER_VERSION },
     { capabilities: { tools: { listChanged: false } } }
@@ -34,18 +44,28 @@ async function runMcpServer() {
   });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const startedAt = Date.now();
+    const toolName = request.params && typeof request.params.name === "string"
+      ? request.params.name
+      : "unknown";
+    debugLog(`request ${request.method || "unknown"} tool ${toolName}`);
     try {
-      return handleToolCall(request.params || {});
+      const result = handleToolCall(request.params || {});
+      debugLog(`request completed tool ${toolName} durationMs ${Date.now() - startedAt}`);
+      return result;
     } catch (error) {
+      debugLog(`request failed tool ${toolName} durationMs ${Date.now() - startedAt}`);
       throw new McpError(ErrorCode.InternalError, "Internal MCP server error.");
     }
   });
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  debugLog("server connected");
 
   await new Promise((resolve) => {
     const finish = () => {
+      debugLog("server stopping");
       process.stdin.off("end", finish);
       process.stdin.off("close", finish);
       process.stdin.off("error", finish);
@@ -105,6 +125,24 @@ function listTools() {
       inputSchema: objectSchema({
         repo: stringProp("Repository path."),
       }),
+      outputSchema: toolOutputSchema(),
+    },
+    {
+      name: "git_create_branch_at_selected",
+      description: "Create a new local branch at the selected commit without checking it out or moving an existing branch.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        name: requiredStringProp("New local branch name."),
+      }, ["name"]),
+      outputSchema: toolOutputSchema(),
+    },
+    {
+      name: "git_reset_plan",
+      description: "Describe a soft, mixed, or hard reset to the selected commit without executing it.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        mode: requiredStringProp("Reset preview mode: soft, mixed, or hard."),
+      }, ["mode"]),
       outputSchema: toolOutputSchema(),
     },
   ];
@@ -168,11 +206,21 @@ function callTool(params) {
   if (name === "git_compare_selected_with_head") {
     const repo = resolveRepo(args.repo);
     const context = getGitContext(repo, 1);
-    const selection = readSelection(context.root);
-    if (!selection || !selection.selectedCommit) {
+    const selection = resolveSelection(context.root);
+    if (!selection) {
       throw new Error("No selected commit. Select one in the TUI or call git_inspect_commit first.");
     }
     return jsonToolResult(compareWithHead(context.root, selection.selectedCommit));
+  }
+
+  if (name === "git_create_branch_at_selected") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(createBranchAtSelected(repo, args.name));
+  }
+
+  if (name === "git_reset_plan") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(buildResetPlan(repo, args.mode));
   }
 
   throw new Error(`Unknown tool: ${name}`);
@@ -205,13 +253,6 @@ function renderGraphText(context, rows) {
   });
 
   return lines.join("\n");
-}
-
-function resolveRepo(repo) {
-  if (repo !== undefined && (typeof repo !== "string" || !repo.trim())) {
-    throw new ToolError("INVALID_REPO", "repo must be a non-empty path.");
-  }
-  return repo || process.env.GIT_GRAPH_MCP_REPO || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 }
 
 function jsonToolResult(value, leadingText) {
@@ -254,16 +295,31 @@ function withSchemaVersion(value) {
   return value;
 }
 
-function normalizeLimit(value) {
-  const limit = value === undefined ? 80 : Number(value);
-  if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
-    throw new ToolError("INVALID_LIMIT", "limit must be an integer from 1 to 500.");
-  }
-  return limit;
-}
-
 function normalizeToolError(error) {
   if (error instanceof ToolError) return error;
+
+  if (error && typeof error.code === "string") {
+    const publicCodes = new Set([
+      "GIT_COMMAND_FAILED",
+      "BRANCH_ALREADY_EXISTS",
+      "INVALID_RESET_MODE",
+      "INVALID_BRANCH_NAME",
+      "INVALID_GIT_PATH",
+      "INVALID_LIMIT",
+      "INVALID_REPO_PATH",
+      "INVALID_REVISION",
+      "INVALID_SELECTION_FILE",
+      "NO_HEAD",
+      "NO_SELECTION",
+      "NOT_GIT_REPOSITORY",
+      "SELECTION_WRITE_FAILED",
+      "STALE_SELECTION",
+      "UNSUPPORTED_SELECTION_VERSION",
+    ]);
+    if (publicCodes.has(error.code)) {
+      return new ToolError(error.code, error.message);
+    }
+  }
 
   const message = error && error.message ? error.message : String(error);
   if (/not a git repository/i.test(message)) {

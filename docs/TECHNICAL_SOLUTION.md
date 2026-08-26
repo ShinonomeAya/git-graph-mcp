@@ -30,24 +30,24 @@ Primary users are developers who work in Claude Code, Codex, Cursor, or another 
 
 ## 3. Current baseline
 
-The repository currently contains a small CommonJS CLI with these working or partially working capabilities:
+The repository contains a small CommonJS CLI with these working capabilities:
 
 - real history read through `git log --graph --topo-order`;
 - static graph output and an interactive TUI;
 - commit selection persisted under `.git/`;
 - CLI commands for graph, status, selection, inspection, and comparison;
-- five read-only MCP tool definitions;
-- an experimental custom MCP transport and Windows timeout investigation.
+- seven MCP tool definitions, including two safe-action tools;
+- the official SDK stdio transport and a preserved Windows timeout investigation.
 
 Verified on 2026-08-26:
 
 - `graph --plain` and `status` execute successfully;
 - all current JavaScript source files pass `node --check`;
-- no automated test suite or CI exists;
-- the official SDK client times out against the current MCP server;
-- the current server responds with `Content-Length` framing, while standard MCP stdio messages are newline-delimited;
-- the current npm dry run includes machine-specific configuration and debug files;
-- the working tree already contains user-owned, uncommitted experiments that must be preserved until their replacement is reviewed.
+- the official SDK client completes initialize, lists all seven tools, and closes cleanly on Windows;
+- stdout is newline-delimited MCP JSON-RPC through the official SDK transport;
+- `GIT_GRAPH_MCP_DEBUG=1` emits concise stderr-only lifecycle diagnostics;
+- the npm dry run is constrained to the runtime/public-document allowlist;
+- the working tree contains user-owned, uncommitted implementation work that must be preserved until review.
 
 ## 4. Scope
 
@@ -304,7 +304,7 @@ The result includes full selected and HEAD object ids, merge base when available
 - Use the official SDK `StdioServerTransport` with `server.connect(transport)`.
 - Do not maintain a parallel custom stdio parser or writer.
 - MCP requests and responses are newline-delimited JSON-RPC on stdin/stdout.
-- All logs go to stderr. Optional file logging is enabled only by `GIT_GRAPH_MCP_DEBUG=1` and must not be required for normal operation.
+- Normal execution creates no log file. Optional lifecycle diagnostics go to stderr only when `GIT_GRAPH_MCP_DEBUG=1`.
 - Handle `SIGINT`, stdin end, and transport close without leaving the child process alive.
 - Stdio is tested by launching the real CLI with the official SDK client, completing initialize, listing tools, calling representative tools, and closing cleanly.
 

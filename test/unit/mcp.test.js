@@ -5,7 +5,7 @@ const { callTool, handleToolCall, jsonToolResult, listTools } = require("../../s
 
 const repoRoot = path.resolve(__dirname, "../..");
 
-test("listTools exposes the five existing tools with closed input schemas", () => {
+test("listTools exposes the seven existing tools with closed input schemas", () => {
   const tools = listTools();
 
   assert.deepEqual(tools.map((tool) => tool.name), [
@@ -14,6 +14,8 @@ test("listTools exposes the five existing tools with closed input schemas", () =
     "git_selected",
     "git_inspect_commit",
     "git_compare_selected_with_head",
+    "git_create_branch_at_selected",
+    "git_reset_plan",
   ]);
 
   for (const tool of tools) {
