@@ -654,14 +654,14 @@ evolution so agents can answer code-history questions without arbitrary Git comm
 
 **Acceptance criteria:**
 
-- [ ] Rename, binary, merge, initial-commit, deleted-file, and invalid-path cases are explicit.
-- [ ] Patch bodies are opt-in, byte-limited, and marked when truncated.
-- [ ] No tool accepts a free-form Git command.
+- [x] Rename, binary, merge, initial-commit, deleted-file, and invalid-path cases are explicit.
+- [x] Patch bodies are opt-in, byte-limited, and marked when truncated.
+- [x] No tool accepts a free-form Git command.
 
 **Verification:**
 
-- [ ] Focused Git-domain and official MCP integration tests pass.
-- [ ] Source assertions and state snapshots prove no write command is reachable.
+- [x] Focused Git-domain and official MCP integration tests pass.
+- [x] Source assertions and state snapshots prove no write command is reachable.
 
 **Dependencies:** T22
 

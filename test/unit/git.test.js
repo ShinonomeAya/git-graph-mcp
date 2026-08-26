@@ -7,6 +7,8 @@ const {
   GitError,
   normalizeLimit,
   parseStatusLines,
+  readCommitDiff,
+  readFileHistory,
   searchCommits,
   resolveSelectionTarget,
   resolveRepo,
@@ -90,6 +92,50 @@ test("searchCommits pages deterministic metadata and preserves filters in its cu
       status: repo.runGit(["status", "--porcelain=v1"]).trim(),
     }, before);
     assert.ok(base);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("commit diff and file history reject unsafe paths and expose bounded patch metadata", () => {
+  const repo = createTempRepo();
+  try {
+    const first = commitFile(repo, "history.txt", "one\n", "initial");
+    const second = commitFile(repo, "history.txt", `${"x".repeat(500)}\n`, "large update");
+    const diff = readCommitDiff(repo.root, second, {
+      path: "history.txt",
+      includePatch: true,
+      maxBytes: 256,
+    });
+    assert.equal(diff.schemaVersion, 2);
+    assert.equal(diff.isInitial, false);
+    assert.equal(diff.files[0].status, "M");
+    assert.equal(diff.files[0].isBinary, false);
+    assert.equal(diff.patch.requested, true);
+    assert.equal(diff.patch.truncated, true);
+    assert.ok(Buffer.byteLength(diff.patch.text, "utf8") <= 256);
+
+    const history = readFileHistory(repo.root, {
+      path: "history.txt",
+      pageSize: 1,
+    });
+    assert.equal(history.schemaVersion, 2);
+    assert.equal(history.results[0].hash, second);
+    assert.equal(history.page.hasMore, true);
+    assert.equal(readFileHistory(repo.root, {
+      path: "history.txt",
+      pageSize: 1,
+      cursor: history.page.nextCursor,
+    }).results[0].hash, first);
+
+    assert.throws(
+      () => readCommitDiff(repo.root, second, { path: "../history.txt" }),
+      (error) => error.code === "INVALID_GIT_PATH"
+    );
+    assert.throws(
+      () => readFileHistory(repo.root, { path: require("node:path").join(repo.root, "history.txt") }),
+      (error) => error.code === "INVALID_GIT_PATH"
+    );
   } finally {
     repo.cleanup();
   }

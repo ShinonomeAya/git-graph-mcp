@@ -51,14 +51,17 @@ For a source checkout in another project, replace the executable with
   and warning bundle; patch content is opt-in.
 - `git_search_commits`: page through commits with bounded ref, author, message,
   and time filters.
+- `git_commit_diff`: return structured commit/file diff metadata; patch text is
+  opt-in and bounded.
+- `git_file_history`: page through the history of one safe relative file path.
 - `git_inspect_commit`: inspect a commit and save it as the current selection.
 - `git_compare_selected_with_head`: compare the selection with `HEAD`.
 - `git_create_branch_at_selected`: create a new local branch at the selection; never move an existing branch.
 - `git_reset_plan`: preview soft, mixed, or hard reset impact; never execute reset.
 
-Legacy tool results contain `schemaVersion: 1`; `git_context_bundle` and
-`git_search_commits` use schema version 2. Expected failures use `isError: true`
-with a stable error code.
+Legacy tool results contain `schemaVersion: 1`; context, search, diff, and
+history results use schema version 2. Expected failures use `isError: true` with
+a stable error code.
 
 ## Resources
 
@@ -96,7 +99,7 @@ For an installed package, use `npx git-graph-mcp mcp` in the MCP client and
 The historical Windows timeout came from an earlier custom transport that
 emitted `Content-Length`-framed messages. The current server uses the official
 SDK `StdioServerTransport`; the official SDK client integration passes on
-Windows and lists all nine tools plus both resources.
+Windows and lists all eleven tools plus both resources.
 
 If Claude Code still reports a connection failure:
 

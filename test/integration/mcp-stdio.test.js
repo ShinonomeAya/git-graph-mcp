@@ -50,6 +50,8 @@ test("official MCP SDK client can initialize and list the existing tools", async
       "git_selected",
       "git_context_bundle",
       "git_search_commits",
+      "git_commit_diff",
+      "git_file_history",
       "git_inspect_commit",
       "git_compare_selected_with_head",
       "git_create_branch_at_selected",
@@ -111,6 +113,21 @@ test("official MCP SDK client can initialize and list the existing tools", async
     assert.equal(search.structuredContent.schemaVersion, 2);
     assert.equal(search.structuredContent.results.length, 1);
     assert.equal(search.structuredContent.page.hasMore, false);
+
+    const diff = await client.callTool({
+      name: "git_commit_diff",
+      arguments: { repo: fixture.root, commit: commitOid, path: "README.md" },
+    }, undefined, { timeout: REQUEST_TIMEOUT });
+    assert.equal(diff.structuredContent.schemaVersion, 2);
+    assert.equal(diff.structuredContent.files[0].status, "A");
+    assert.equal(diff.structuredContent.patch, null);
+
+    const history = await client.callTool({
+      name: "git_file_history",
+      arguments: { repo: fixture.root, path: "README.md", pageSize: 1 },
+    }, undefined, { timeout: REQUEST_TIMEOUT });
+    assert.equal(history.structuredContent.schemaVersion, 2);
+    assert.equal(history.structuredContent.results[0].hash, commitOid);
 
     const comparison = await client.callTool({
       name: "git_compare_selected_with_head",

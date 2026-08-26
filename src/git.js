@@ -3,6 +3,7 @@ const { execFileSync } = require("child_process");
 const path = require("path");
 
 const FIELD = "\x1f";
+const EMPTY_TREE_OID = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
 
 class GitError extends Error {
   constructor(code, message, cause) {
@@ -559,6 +560,256 @@ function readDiff(root, leftRevision, rightRevision) {
   return git(resolvedRoot, ["diff", "--no-ext-diff", "--unified=3", leftOid, rightOid]);
 }
 
+function readCommitDiff(root, revision, options = {}) {
+  const resolvedRoot = resolveRepo(root);
+  const commitOid = resolveCommit(resolvedRoot, revision);
+  const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const filePath = input.path === undefined ? null : normalizeGitFilePath(input.path);
+  const parents = git(resolvedRoot, ["rev-list", "--parents", "-n", "1", commitOid])
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(1);
+  const parentIndex = parents.length ? normalizeParentIndex(input.parent, parents.length) : null;
+  if (!parents.length && input.parent !== undefined) {
+    throw new GitError("INVALID_DIFF_FILTER", "An initial commit does not have a parent index.");
+  }
+  const parentOid = parents[parentIndex === null ? 0 : parentIndex - 1] || EMPTY_TREE_OID;
+  const maxFiles = normalizeDiffLimit(input.maxFiles, "maxFiles", 100, 1, 500);
+  const maxBytes = normalizeDiffLimit(input.maxBytes, "maxBytes", 32 * 1024, 256, 1024 * 1024);
+  const nameStatus = readNameStatus(resolvedRoot, parentOid, commitOid, filePath);
+  const stats = readNumstat(resolvedRoot, parentOid, commitOid, filePath);
+  const files = nameStatus.files.slice(0, maxFiles).map((file) => ({
+    ...file,
+    ...(stats.get(file.path) || stats.get(file.oldPath) || {}),
+    isBinary: Boolean((stats.get(file.path) || stats.get(file.oldPath) || {}).isBinary),
+  }));
+  const patch = input.includePatch === true
+    ? buildCommitPatch(resolvedRoot, parentOid, commitOid, filePath, maxBytes)
+    : null;
+
+  return {
+    schemaVersion: 2,
+    kind: "commit_diff",
+    repo: resolvedRoot,
+    repoRoot: resolvedRoot,
+    commit: commitOid,
+    parents,
+    parentIndex,
+    parentOid,
+    isInitial: parents.length === 0,
+    isMerge: parents.length > 1,
+    path: filePath,
+    files,
+    fileCount: nameStatus.files.length,
+    filesTruncated: nameStatus.files.length > maxFiles,
+    patch,
+  };
+}
+
+function readFileHistory(root, options = {}) {
+  const resolvedRoot = resolveRepo(root);
+  const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const filePath = normalizeGitFilePath(input.path);
+  const pageSize = normalizeSearchPageSize(input.pageSize);
+  const ref = input.ref === undefined ? "HEAD" : normalizeHistoryRef(resolvedRoot, input.ref);
+  const filters = { ref, path: filePath };
+  const cursor = decodeFileHistoryCursor(input.cursor, filters);
+  const offset = cursor ? cursor.offset : 0;
+  const format = `${FIELD}%H${FIELD}%P${FIELD}%D${FIELD}%an${FIELD}%ae${FIELD}%at${FIELD}%s`;
+  const output = git(resolvedRoot, [
+    "log",
+    "--follow",
+    "--date-order",
+    "--decorate=full",
+    `--max-count=${pageSize + 1}`,
+    `--skip=${offset}`,
+    `--format=${format}`,
+    ref,
+    "--",
+    filePath,
+  ]);
+  const records = output
+    .split(/\r?\n/)
+    .filter((line) => line.includes(FIELD))
+    .map((line) => toSearchCommit(parseCommitRecord(line.slice(line.indexOf(FIELD) + FIELD.length), "")));
+  const hasMore = records.length > pageSize;
+  const results = records.slice(0, pageSize).map((commit) => ({ ...commit, path: filePath }));
+  return {
+    schemaVersion: 2,
+    kind: "file_history",
+    repo: resolvedRoot,
+    repoRoot: resolvedRoot,
+    filters,
+    results,
+    page: {
+      pageSize,
+      cursor: input.cursor || null,
+      nextCursor: hasMore ? encodeFileHistoryCursor({ offset: offset + pageSize, filters }) : null,
+      hasMore,
+      returned: results.length,
+      offset,
+    },
+  };
+}
+
+function readNameStatus(root, parentOid, commitOid, filePath) {
+  const args = ["diff", "--name-status", "-z", "-M", parentOid, commitOid, "--"];
+  if (filePath) args.push(filePath);
+  const tokens = git(root, args).split("\0");
+  const files = [];
+  for (let index = 0; index < tokens.length;) {
+    const statusToken = tokens[index++];
+    if (!statusToken) continue;
+    const status = statusToken[0];
+    if (status === "R" || status === "C") {
+      const oldPath = tokens[index++] || "";
+      const newPath = tokens[index++] || "";
+      files.push({
+        status,
+        score: Number(statusToken.slice(1)) || null,
+        path: newPath,
+        oldPath,
+        newPath,
+      });
+    } else {
+      const currentPath = tokens[index++] || "";
+      files.push({
+        status,
+        score: null,
+        path: currentPath,
+        oldPath: status === "D" ? currentPath : null,
+        newPath: status === "A" ? currentPath : status === "D" ? null : currentPath,
+      });
+    }
+  }
+  return { files };
+}
+
+function readNumstat(root, parentOid, commitOid, filePath) {
+  const args = ["diff", "--numstat", "-z", "-M", parentOid, commitOid, "--"];
+  if (filePath) args.push(filePath);
+  const tokens = git(root, args).split("\0");
+  const stats = new Map();
+  for (let index = 0; index < tokens.length;) {
+    const summary = tokens[index++];
+    if (!summary) continue;
+    const parts = summary.split("\t");
+    if (parts.length < 3) continue;
+    const additions = parts[0] === "-" ? null : Number(parts[0]);
+    const deletions = parts[1] === "-" ? null : Number(parts[1]);
+    const binary = parts[0] === "-" || parts[1] === "-";
+    const currentPath = parts.slice(2).join("\t");
+    if (!currentPath) {
+      const oldPath = tokens[index++] || "";
+      const newPath = tokens[index++] || "";
+      stats.set(oldPath, { additions, deletions, isBinary: binary });
+      stats.set(newPath, { additions, deletions, isBinary: binary });
+    } else {
+      stats.set(currentPath, { additions, deletions, isBinary: binary });
+    }
+  }
+  return stats;
+}
+
+function buildCommitPatch(root, parentOid, commitOid, filePath, maxBytes) {
+  const args = ["diff", "--no-ext-diff", "--binary", "--full-index", "--unified=3", parentOid, commitOid, "--"];
+  if (filePath) args.push(filePath);
+  const raw = git(root, args);
+  const text = truncateUtf8(raw, maxBytes);
+  return {
+    requested: true,
+    text,
+    bytes: Buffer.byteLength(text, "utf8"),
+    truncated: text !== raw,
+  };
+}
+
+function normalizeGitFilePath(value) {
+  if (
+    typeof value !== "string"
+    || !value.trim()
+    || value.includes("\0")
+    || path.isAbsolute(value)
+    || value.startsWith("-")
+    || value.split(/[\\/]/).includes("..")
+  ) {
+    throw new GitError("INVALID_GIT_PATH", "A safe relative Git file path is required.");
+  }
+  return value.trim().replace(/\\/g, "/");
+}
+
+function normalizeHistoryRef(root, value) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
+  }
+  const ref = value.trim();
+  if (!isFullRefName(ref)) {
+    throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
+  }
+  resolveCommit(root, ref);
+  return ref;
+}
+
+function normalizeParentIndex(value, count) {
+  const normalized = value === undefined
+    ? 1
+    : typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value.trim())
+        ? Number(value)
+        : NaN;
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > count) {
+    throw new GitError("INVALID_DIFF_FILTER", `parent must be an integer from 1 to ${count}.`);
+  }
+  return normalized;
+}
+
+function normalizeDiffLimit(value, name, fallback, minimum, maximum) {
+  const normalized = value === undefined
+    ? fallback
+    : typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value.trim())
+        ? Number(value)
+        : NaN;
+  if (!Number.isInteger(normalized) || normalized < minimum || normalized > maximum) {
+    throw new GitError("INVALID_DIFF_FILTER", `${name} must be an integer from ${minimum} to ${maximum}.`);
+  }
+  return normalized;
+}
+
+function encodeFileHistoryCursor({ offset, filters }) {
+  return Buffer.from(JSON.stringify({ version: 1, offset, filters }), "utf8").toString("base64url");
+}
+
+function decodeFileHistoryCursor(value, filters) {
+  if (value === undefined || value === null) return null;
+  let payload;
+  try {
+    payload = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+  } catch (error) {
+    throw new GitError("INVALID_SEARCH_CURSOR", "cursor must be a valid file history cursor.", error);
+  }
+  if (
+    !payload
+    || payload.version !== 1
+    || !Number.isInteger(payload.offset)
+    || payload.offset < 0
+    || payload.offset > 1000000000
+    || JSON.stringify(payload.filters) !== JSON.stringify(filters)
+  ) {
+    throw new GitError("INVALID_SEARCH_CURSOR", "cursor does not match this file history.");
+  }
+  return payload;
+}
+
+function truncateUtf8(value, maxBytes) {
+  const buffer = Buffer.from(String(value || ""), "utf8");
+  if (buffer.length <= maxBytes) return String(value || "");
+  return buffer.subarray(0, maxBytes).toString("utf8");
+}
+
 function compareResolvedRevisions(resolvedRoot, selectedOid, headOid) {
   const relation = classifyRelationship(resolvedRoot, selectedOid, headOid);
   const countParts = git(resolvedRoot, [
@@ -686,7 +937,9 @@ module.exports = {
   parseRefs,
   parseStatusLines,
   readCommit,
+  readCommitDiff,
   readDiff,
+  readFileHistory,
   resolveSelectionTarget,
   validateBranchName,
   resolveCommit,

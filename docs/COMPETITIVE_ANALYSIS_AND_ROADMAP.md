@@ -311,7 +311,7 @@ Checkpoint：同一选择在 TUI、CLI 和 MCP 中 oid 完全一致；旧 v1 文
 
 1. T21：为默认仓库增加 selection/status MCP resources，保留 tool 等价路径（已完成，含官方 SDK list/read 验收）；
 2. T22：增加 refs/author/message 过滤和可分页提交搜索（已完成，含 CLI/MCP 游标与只读快照验收）；
-3. T23：增加结构化 commit diff 与 file history；
+3. T23：增加结构化 commit diff 与 file history（已完成，含特殊文件类型、路径边界与补丁预算验收）；
 4. T24：建立大仓库基准、超时、取消和输出上限，只有指标不达标时才异步重构或缓存。
 
 Checkpoint：大型 fixture 中首屏和搜索满足预算；所有结果可截断且显式报告；没有

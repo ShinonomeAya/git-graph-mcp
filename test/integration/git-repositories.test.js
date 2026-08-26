@@ -13,6 +13,8 @@ const {
   getGitContext,
   getGitStatus,
   readCommit,
+  readCommitDiff,
+  readFileHistory,
   resolveRepo,
   searchCommits,
 } = require("../../src/git");
@@ -233,6 +235,54 @@ test("commit search keeps merge metadata and deterministic order", () => {
     assert.equal(result.results[0].parents.length, 2);
     assert.equal(result.results.some((commit) => commit.hash === feature), true);
     assert.equal(result.results.some((commit) => commit.hash === main), true);
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("commit diff explicitly reports initial, rename, binary, deleted, and merge cases", () => {
+  const repo = createTempRepo();
+  try {
+    const initial = commitFile(repo, "old.txt", "old\n", "initial");
+    const initialDiff = readCommitDiff(repo.root, initial, { path: "old.txt" });
+    assert.equal(initialDiff.isInitial, true);
+    assert.equal(initialDiff.files[0].status, "A");
+
+    repo.runGit(["mv", "old.txt", "new.txt"]);
+    repo.runGit(["commit", "-m", "rename"]);
+    const rename = repo.runGit(["rev-parse", "HEAD"]).trim();
+    const renameDiff = readCommitDiff(repo.root, rename);
+    assert.equal(renameDiff.files[0].status, "R");
+    assert.equal(renameDiff.files[0].oldPath, "old.txt");
+    assert.equal(renameDiff.files[0].newPath, "new.txt");
+
+    fs.writeFileSync(path.join(repo.root, "binary.dat"), Buffer.from([0, 1, 2]));
+    repo.runGit(["add", "--", "binary.dat"]);
+    repo.runGit(["commit", "-m", "binary"]);
+    const binary = repo.runGit(["rev-parse", "HEAD"]).trim();
+    assert.equal(readCommitDiff(repo.root, binary).files.find((file) => file.path === "binary.dat").isBinary, true);
+
+    repo.runGit(["rm", "new.txt"]);
+    repo.runGit(["commit", "-m", "delete"]);
+    const deleted = repo.runGit(["rev-parse", "HEAD"]).trim();
+    assert.equal(readCommitDiff(repo.root, deleted).files[0].status, "D");
+
+    const mainBranch = repo.runGit(["branch", "--show-current"]).trim();
+    repo.runGit(["checkout", "-b", "feature"]);
+    commitFile(repo, "feature.txt", "feature\n", "feature");
+    repo.runGit(["checkout", mainBranch]);
+    commitFile(repo, "main.txt", "main\n", "main");
+    repo.runGit(["merge", "--no-ff", "feature", "-m", "merge"]);
+    const merge = repo.runGit(["rev-parse", "HEAD"]).trim();
+    const beforeReads = snapshotGitState(repo);
+    const mergeDiff = readCommitDiff(repo.root, merge, { parent: 2 });
+    assert.equal(mergeDiff.isMerge, true);
+    assert.equal(mergeDiff.parentIndex, 2);
+    assert.equal(mergeDiff.parentOid, repo.runGit(["rev-parse", "HEAD^2"]).trim());
+
+    const history = readFileHistory(repo.root, { path: "feature.txt", pageSize: 5 });
+    assert.equal(history.results[0].subject, "feature");
+    assert.deepEqual(snapshotGitState(repo), beforeReads);
   } finally {
     repo.cleanup();
   }

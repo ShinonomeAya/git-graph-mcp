@@ -5,6 +5,8 @@ const {
   getGitStatus,
   normalizeLimit,
   readCommit,
+  readCommitDiff,
+  readFileHistory,
   resolveRepo,
   searchCommits,
 } = require("./git");
@@ -190,6 +192,47 @@ function listTools() {
       outputSchema: toolOutputSchema(),
     },
     {
+      name: "git_commit_diff",
+      description: "Return bounded structured diff metadata for one commit; patch text is opt-in.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        commit: requiredStringProp("Commit hash, branch, tag, or other Git revision."),
+        path: stringProp("Optional safe relative file path."),
+        parent: numberProp("Merge parent number, starting at 1. Defaults to 1.", {
+          minimum: 1,
+          maximum: 8,
+        }),
+        maxFiles: numberProp("Maximum changed files. Defaults to 100.", {
+          minimum: 1,
+          maximum: 500,
+        }),
+        maxBytes: numberProp("Maximum patch bytes. Defaults to 32768.", {
+          minimum: 256,
+          maximum: 1048576,
+        }),
+        includePatch: {
+          type: "boolean",
+          description: "Include a bounded unified patch body.",
+        },
+      }, ["commit"]),
+      outputSchema: toolOutputSchema(),
+    },
+    {
+      name: "git_file_history",
+      description: "Return bounded commit history for one safe relative file path.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        path: requiredStringProp("Safe relative file path."),
+        ref: stringProp("Full Git ref to search, such as refs/heads/main. Defaults to HEAD."),
+        pageSize: numberProp("Maximum commits per page. Defaults to 20.", {
+          minimum: 1,
+          maximum: 100,
+        }),
+        cursor: stringProp("Opaque cursor returned by a previous history page."),
+      }, ["path"]),
+      outputSchema: toolOutputSchema(),
+    },
+    {
       name: "git_inspect_commit",
       description: "Inspect a commit and save it as the current AI-readable selection.",
       inputSchema: objectSchema({
@@ -330,6 +373,27 @@ function callTool(params) {
     }));
   }
 
+  if (name === "git_commit_diff") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(readCommitDiff(repo, args.commit, {
+      path: args.path,
+      parent: args.parent,
+      maxFiles: args.maxFiles,
+      maxBytes: args.maxBytes,
+      includePatch: args.includePatch,
+    }));
+  }
+
+  if (name === "git_file_history") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(readFileHistory(repo, {
+      path: args.path,
+      ref: args.ref,
+      pageSize: args.pageSize,
+      cursor: args.cursor,
+    }));
+  }
+
   if (name === "git_inspect_commit") {
     if (typeof args.commit !== "string" || !args.commit.trim() || args.commit.startsWith("-")) {
       throw new ToolError("INVALID_REVISION", "A valid commit revision is required.");
@@ -452,6 +516,7 @@ function normalizeToolError(error) {
       "INVALID_REF",
       "INVALID_SEARCH_FILTER",
       "INVALID_SEARCH_CURSOR",
+      "INVALID_DIFF_FILTER",
       "NO_HEAD",
       "NO_SELECTION",
       "NOT_GIT_REPOSITORY",
