@@ -288,6 +288,20 @@ test("commit diff explicitly reports initial, rename, binary, deleted, and merge
   }
 });
 
+test("slow Git reads fail with a stable timeout and leave no blocked process", () => {
+  const repo = createTempRepo();
+  try {
+    commitFile(repo, "timeout.txt", "timeout\n", "timeout");
+    assert.throws(
+      () => getGitContext(repo.root, 1, { timeoutMs: 1 }),
+      (error) => error.code === "GIT_TIMEOUT"
+    );
+    assert.equal(repo.runGit(["status", "--porcelain=v1"]).trim(), "");
+  } finally {
+    repo.cleanup();
+  }
+});
+
 test("comparison classifies DIVERGED, reports both sides, and warns on dirty state", () => {
   const { repo, base, feature, head } = createDivergedFixture();
   try {

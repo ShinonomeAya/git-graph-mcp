@@ -4,9 +4,9 @@
 
 确认 v0.2 在 Windows + Node.js 22/24 + Git 环境下具备三类可用性：
 
-1. Git 域和选择状态结果正确；
+1. Git 域、选择状态和只读历史结果正确；
 2. CLI/TUI 在真实终端可操作且退出后不残留终端状态；
-3. 官方 MCP 客户端可以完成握手、调用七个工具并获得稳定结果。
+3. 官方 MCP 客户端可以完成握手、读取两个资源、调用十一个工具并获得稳定结果。
 
 ## 测试层级
 
@@ -15,6 +15,7 @@
 - 图布局、空历史、窄宽度截断和导航边界；
 - Git revision、limit、status、关系分类和错误码；
 - 选择状态迁移、原子写入、过期选择和 linked worktree 隔离；
+- bounded context、提交搜索、结构化 diff 和文件历史的预算、游标、特殊文件类型与错误码；
 - 分支名称校验、分支幂等性决策和三种 reset 预览影响。
 
 命令：
@@ -37,9 +38,9 @@ npm run test:integration
 
 ### 3. 公共 CLI/MCP 测试
 
-- CLI graph/status/inspect/selected/compare-selected 的 JSON 或纯文本契约；
+- CLI graph/status/search/inspect/selected/compare-selected 的 JSON 或纯文本契约；
 - 官方 MCP SDK initialize、工具列表、成功结果和预期错误；
-- 七个工具名称、schemaVersion、错误码和 reset 只预览不执行；
+- 十一个工具、两个资源、schemaVersion、错误码和 reset 只预览不执行；
 - 诊断关闭时 stderr 为空，开启时只输出带时间戳的安全生命周期信息。
 
 ### 4. 打包安装测试
@@ -65,12 +66,26 @@ npm run test:package-install
 窄终端约 60 列由固定宽度自动化测试覆盖，重点检查长 subject、路径和
 refs 不造成横向溢出。
 
+### 6. 大仓库预算与超时
+
+benchmark 使用独立临时仓库，不读取开发仓库，也不纳入默认 `npm run check`：
+
+```powershell
+npm run test:benchmark
+npm run benchmark:large
+```
+
+每个 Git 进程默认最多运行 5000ms；调用方可在 graph、context、search、diff
+和 file history 上传入 `timeoutMs`（1–60000）。超时统一返回 `GIT_TIMEOUT`，
+并通过后续 Git status 检查确认没有遗留阻塞进程。
+
 ## 本轮结果
 
-- 全量 `npm run check`：通过，44 项测试、smoke、package allowlist 通过；
+- 全量 `npm run check`：通过，65 项测试、smoke、package allowlist 通过；
+- `npm run test:benchmark`：通过，40 提交隔离临时仓库的 graph/search/diff/history 预算烟测；
 - `npm run test:package-install`：通过，安装后 CLI/MCP 均可用；
 - 真实 Windows TTY：通过，图形、选中行、详情和退出清理均正常；
-- 官方 MCP SDK：通过，能列出七个工具并调用 reset 预览；
+- 官方 MCP SDK：通过，能列出十一个工具、读取两个资源并调用 reset 预览；
 - 生产依赖安全审计：通过（官方 npm registry，`npm audit --omit=dev --audit-level=high` 返回 0 vulnerabilities）；
 - MCP SDK 已从 1.29.0 升级到 1.30.0，并重新通过全量回归与打包安装测试；
 - 临时 Node.js 22.23.2 与 24.19.0：Windows 本机均通过 44 项测试；

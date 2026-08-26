@@ -70,6 +70,19 @@ test("invalid graph limits return a stable tool error", () => {
   });
 });
 
+test("invalid Git timeout returns a stable tool error", () => {
+  const result = handleToolCall({
+    name: "git_graph",
+    arguments: { repo: repoRoot, timeoutMs: 0 },
+  });
+
+  assert.equal(result.isError, true);
+  assert.deepEqual(result.structuredContent.error, {
+    code: "INVALID_TIMEOUT",
+    message: "timeoutMs must be an integer from 1 to 60000.",
+  });
+});
+
 test("resources expose default selection and status with tool-compatible JSON", () => {
   const resources = listResources();
 

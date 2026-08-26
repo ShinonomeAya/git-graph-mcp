@@ -251,7 +251,7 @@ Git context with narrow and explicit safety boundaries.
 - [x] T21 — Add default-repository selection/status MCP resources with tool parity.
 - [x] T22 — Add paged commit search and ref/author/message filters.
 - [x] T23 — Add structured commit diff and file history.
-- T24 — Add large-repository budgets and only optimize paths that miss them.
+- [x] T24 — Add large-repository budgets and only optimize paths that miss them.
 
 ### Checkpoint G: read-only exploration
 

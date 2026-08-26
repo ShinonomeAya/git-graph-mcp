@@ -17,7 +17,9 @@ async function runCli(argv) {
   const command = argv[0] && !argv[0].startsWith("-") ? argv[0] : "graph";
   const args = command === "graph" ? argv.slice(argv[0] === "graph" ? 1 : 0) : argv.slice(1);
   const parsed = parseCommandArgs(command, args);
-  const repo = command === "mcp" ? null : resolveRepo(parsed.options.repo);
+  const repo = command === "mcp" ? null : resolveRepo(parsed.options.repo, {
+    timeoutMs: parsed.options.timeout,
+  });
 
   if (command === "mcp") {
     await runMcpServer();
@@ -26,7 +28,7 @@ async function runCli(argv) {
 
   if (command === "graph") {
     const limit = normalizeLimit(parsed.options.limit);
-    const context = getGitContext(repo, limit);
+    const context = getGitContext(repo, limit, { timeoutMs: parsed.options.timeout });
     const rows = buildGraphRows(context.commits);
 
     if (!process.stdout.isTTY || parsed.options.plain) {
@@ -39,8 +41,8 @@ async function runCli(argv) {
   }
 
   if (command === "status") {
-    const context = getGitContext(repo, normalizeLimit(parsed.options.limit, 40));
-    const status = getGitStatus(context.root);
+    const context = getGitContext(repo, normalizeLimit(parsed.options.limit, 40), { timeoutMs: parsed.options.timeout });
+    const status = getGitStatus(context.root, { timeoutMs: parsed.options.timeout });
     console.log(JSON.stringify({
       repo: context.root,
       head: context.head,
@@ -60,6 +62,7 @@ async function runCli(argv) {
       message: parsed.options.message,
       since: parsed.options.since,
       until: parsed.options.until,
+      timeoutMs: parsed.options.timeout,
     }), null, 2));
     return;
   }
@@ -123,8 +126,8 @@ async function runCli(argv) {
 }
 
 const OPTION_DEFINITIONS = {
-  graph: { "--repo": "value", "--limit": "value", "--plain": "flag" },
-  status: { "--repo": "value", "--limit": "value" },
+  graph: { "--repo": "value", "--limit": "value", "--timeout": "value", "--plain": "flag" },
+  status: { "--repo": "value", "--limit": "value", "--timeout": "value" },
   selected: { "--repo": "value", "--limit": "value" },
   search: {
     "--repo": "value",
@@ -135,6 +138,7 @@ const OPTION_DEFINITIONS = {
     "--message": "value",
     "--since": "value",
     "--until": "value",
+    "--timeout": "value",
   },
   "compare-selected": { "--repo": "value", "--limit": "value" },
   inspect: { "--repo": "value" },

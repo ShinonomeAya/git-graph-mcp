@@ -4,6 +4,7 @@ const path = require("path");
 
 const FIELD = "\x1f";
 const EMPTY_TREE_OID = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+const DEFAULT_GIT_TIMEOUT_MS = 5000;
 
 class GitError extends Error {
   constructor(code, message, cause) {
@@ -27,7 +28,8 @@ function normalizeLimit(value, fallback = 80) {
   return normalized;
 }
 
-function resolveRepo(repo) {
+function resolveRepo(repo, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
   const requested = repo === undefined
     ? process.env.GIT_GRAPH_MCP_REPO || process.env.CLAUDE_PROJECT_DIR || process.cwd()
     : repo;
@@ -46,8 +48,9 @@ function resolveRepo(repo) {
   }
 
   try {
-    return path.resolve(git(candidate, ["rev-parse", "--show-toplevel"]).trim());
+    return path.resolve(git(candidate, ["rev-parse", "--show-toplevel"], { timeoutMs }).trim());
   } catch (error) {
+    if (error instanceof GitError && error.code === "GIT_TIMEOUT") throw error;
     if (error instanceof GitError && error.code === "NOT_GIT_REPOSITORY") throw error;
     throw new GitError("NOT_GIT_REPOSITORY", "The path is not a Git repository.", error);
   }
@@ -62,13 +65,16 @@ function resolveGitPath(root, name) {
   return path.resolve(resolvedRoot, gitPath);
 }
 
-function resolveCommit(root, revision) {
+function resolveCommit(root, revision, options = {}) {
   if (typeof revision !== "string" || !revision.trim() || revision.startsWith("-")) {
     throw new GitError("INVALID_REVISION", "A valid Git revision is required.");
   }
   try {
-    return git(resolveRepo(root), ["rev-parse", "--verify", `${revision}^{commit}`]).trim();
+    return git(resolveRepo(root, options), ["rev-parse", "--verify", `${revision}^{commit}`], {
+      timeoutMs: normalizeTimeoutMs(options.timeoutMs),
+    }).trim();
   } catch (error) {
+    if (error instanceof GitError && error.code === "GIT_TIMEOUT") throw error;
     if (error instanceof GitError && error.code === "INVALID_REVISION") throw error;
     throw new GitError("INVALID_REVISION", "The requested Git revision does not exist.", error);
   }
@@ -161,13 +167,14 @@ function createBranch(root, name, oid) {
   return { branch, targetOid, created: true, alreadyExists: false };
 }
 
-function getGitContext(repo, limit) {
-  const root = resolveRepo(repo);
+function getGitContext(repo, limit, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
+  const root = resolveRepo(repo, { timeoutMs });
   const normalizedLimit = normalizeLimit(limit);
-  const headOid = canGit(root, ["rev-parse", "--verify", "HEAD"])
-    ? git(root, ["rev-parse", "HEAD"]).trim()
+  const headOid = canGit(root, ["rev-parse", "--verify", "HEAD"], { timeoutMs })
+    ? git(root, ["rev-parse", "HEAD"], { timeoutMs }).trim()
     : null;
-  const branch = readBranch(root);
+  const branch = readBranch(root, { timeoutMs });
 
   return {
     root,
@@ -177,11 +184,11 @@ function getGitContext(repo, limit) {
     branch,
     isEmpty: !headOid,
     isDetached: branch === "DETACHED",
-    commits: headOid ? readLog(root, normalizedLimit) : [],
+    commits: headOid ? readLog(root, normalizedLimit, { timeoutMs }) : [],
   };
 }
 
-function readLog(root, limit) {
+function readLog(root, limit, options = {}) {
   const format = `${FIELD}%H${FIELD}%P${FIELD}%D${FIELD}%an${FIELD}%ae${FIELD}%at${FIELD}%s`;
   const output = git(root, [
     "log",
@@ -190,7 +197,7 @@ function readLog(root, limit) {
     "--decorate=full",
     `--max-count=${limit}`,
     `--format=${format}`,
-  ]);
+  ], { timeoutMs: normalizeTimeoutMs(options.timeoutMs) });
 
   const commits = [];
   output
@@ -213,10 +220,12 @@ function readLog(root, limit) {
 }
 
 function searchCommits(root, options = {}) {
-  const resolvedRoot = resolveRepo(root);
-  const pageSize = normalizeSearchPageSize(options.pageSize);
-  const filters = normalizeSearchFilters(resolvedRoot, options);
-  const cursor = decodeSearchCursor(options.cursor, filters);
+  const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const timeoutMs = normalizeTimeoutMs(input.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
+  const pageSize = normalizeSearchPageSize(input.pageSize);
+  const filters = normalizeSearchFilters(resolvedRoot, input, { timeoutMs });
+  const cursor = decodeSearchCursor(input.cursor, filters);
   const offset = cursor ? cursor.offset : 0;
   const format = `${FIELD}%H${FIELD}%P${FIELD}%D${FIELD}%an${FIELD}%ae${FIELD}%at${FIELD}%s`;
   const args = [
@@ -233,7 +242,7 @@ function searchCommits(root, options = {}) {
   if (filters.until) args.push(`--until=${filters.until}`);
   args.push(filters.ref);
 
-  const records = git(resolvedRoot, args)
+  const records = git(resolvedRoot, args, { timeoutMs })
     .split(/\r?\n/)
     .filter((line) => line.includes(FIELD))
     .map((line) => parseCommitRecord(line.slice(line.indexOf(FIELD) + FIELD.length), ""));
@@ -252,7 +261,7 @@ function searchCommits(root, options = {}) {
     results,
     page: {
       pageSize,
-      cursor: options.cursor || null,
+      cursor: input.cursor || null,
       nextCursor,
       hasMore,
       returned: results.length,
@@ -275,14 +284,14 @@ function normalizeSearchPageSize(value) {
   return normalized;
 }
 
-function normalizeSearchFilters(root, options) {
+function normalizeSearchFilters(root, options, commandOptions = {}) {
   const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
   const ref = input.ref === undefined ? "HEAD" : normalizeSearchString(input.ref, "ref");
   if (ref !== "HEAD") {
     if (!isFullRefName(ref)) {
       throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
     }
-    resolveCommit(root, ref);
+    resolveCommit(root, ref, commandOptions);
   }
   const filters = {
     ref,
@@ -390,14 +399,15 @@ function parseRefs(raw) {
     .filter(Boolean);
 }
 
-function getGitStatus(root) {
-  const resolvedRoot = resolveRepo(root);
-  const lines = git(resolvedRoot, ["status", "--porcelain=v1", "--branch"])
+function getGitStatus(root, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
+  const lines = git(resolvedRoot, ["status", "--porcelain=v1", "--branch"], { timeoutMs })
     .split(/\r?\n/)
     .filter(Boolean);
   const parsed = parseStatusLines(lines);
-  const headOid = canGit(resolvedRoot, ["rev-parse", "--verify", "HEAD"])
-    ? git(resolvedRoot, ["rev-parse", "HEAD"]).trim()
+  const headOid = canGit(resolvedRoot, ["rev-parse", "--verify", "HEAD"], { timeoutMs })
+    ? git(resolvedRoot, ["rev-parse", "HEAD"], { timeoutMs }).trim()
     : null;
 
   return {
@@ -553,19 +563,21 @@ function compareRevisions(root, leftRevision, rightRevision) {
   return compareResolvedRevisions(resolvedRoot, leftOid, rightOid);
 }
 
-function readDiff(root, leftRevision, rightRevision) {
-  const resolvedRoot = resolveRepo(root);
-  const leftOid = resolveCommit(resolvedRoot, leftRevision);
-  const rightOid = resolveCommit(resolvedRoot, rightRevision);
-  return git(resolvedRoot, ["diff", "--no-ext-diff", "--unified=3", leftOid, rightOid]);
+function readDiff(root, leftRevision, rightRevision, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
+  const leftOid = resolveCommit(resolvedRoot, leftRevision, { timeoutMs });
+  const rightOid = resolveCommit(resolvedRoot, rightRevision, { timeoutMs });
+  return git(resolvedRoot, ["diff", "--no-ext-diff", "--unified=3", leftOid, rightOid], { timeoutMs });
 }
 
 function readCommitDiff(root, revision, options = {}) {
-  const resolvedRoot = resolveRepo(root);
-  const commitOid = resolveCommit(resolvedRoot, revision);
   const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const timeoutMs = normalizeTimeoutMs(input.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
+  const commitOid = resolveCommit(resolvedRoot, revision, { timeoutMs });
   const filePath = input.path === undefined ? null : normalizeGitFilePath(input.path);
-  const parents = git(resolvedRoot, ["rev-list", "--parents", "-n", "1", commitOid])
+  const parents = git(resolvedRoot, ["rev-list", "--parents", "-n", "1", commitOid], { timeoutMs })
     .trim()
     .split(/\s+/)
     .filter(Boolean)
@@ -577,15 +589,15 @@ function readCommitDiff(root, revision, options = {}) {
   const parentOid = parents[parentIndex === null ? 0 : parentIndex - 1] || EMPTY_TREE_OID;
   const maxFiles = normalizeDiffLimit(input.maxFiles, "maxFiles", 100, 1, 500);
   const maxBytes = normalizeDiffLimit(input.maxBytes, "maxBytes", 32 * 1024, 256, 1024 * 1024);
-  const nameStatus = readNameStatus(resolvedRoot, parentOid, commitOid, filePath);
-  const stats = readNumstat(resolvedRoot, parentOid, commitOid, filePath);
+  const nameStatus = readNameStatus(resolvedRoot, parentOid, commitOid, filePath, { timeoutMs });
+  const stats = readNumstat(resolvedRoot, parentOid, commitOid, filePath, { timeoutMs });
   const files = nameStatus.files.slice(0, maxFiles).map((file) => ({
     ...file,
     ...(stats.get(file.path) || stats.get(file.oldPath) || {}),
     isBinary: Boolean((stats.get(file.path) || stats.get(file.oldPath) || {}).isBinary),
   }));
   const patch = input.includePatch === true
-    ? buildCommitPatch(resolvedRoot, parentOid, commitOid, filePath, maxBytes)
+    ? buildCommitPatch(resolvedRoot, parentOid, commitOid, filePath, maxBytes, { timeoutMs })
     : null;
 
   return {
@@ -608,11 +620,12 @@ function readCommitDiff(root, revision, options = {}) {
 }
 
 function readFileHistory(root, options = {}) {
-  const resolvedRoot = resolveRepo(root);
   const input = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  const timeoutMs = normalizeTimeoutMs(input.timeoutMs);
+  const resolvedRoot = resolveRepo(root, { timeoutMs });
   const filePath = normalizeGitFilePath(input.path);
   const pageSize = normalizeSearchPageSize(input.pageSize);
-  const ref = input.ref === undefined ? "HEAD" : normalizeHistoryRef(resolvedRoot, input.ref);
+  const ref = input.ref === undefined ? "HEAD" : normalizeHistoryRef(resolvedRoot, input.ref, { timeoutMs });
   const filters = { ref, path: filePath };
   const cursor = decodeFileHistoryCursor(input.cursor, filters);
   const offset = cursor ? cursor.offset : 0;
@@ -628,7 +641,7 @@ function readFileHistory(root, options = {}) {
     ref,
     "--",
     filePath,
-  ]);
+  ], { timeoutMs });
   const records = output
     .split(/\r?\n/)
     .filter((line) => line.includes(FIELD))
@@ -653,10 +666,10 @@ function readFileHistory(root, options = {}) {
   };
 }
 
-function readNameStatus(root, parentOid, commitOid, filePath) {
+function readNameStatus(root, parentOid, commitOid, filePath, options = {}) {
   const args = ["diff", "--name-status", "-z", "-M", parentOid, commitOid, "--"];
   if (filePath) args.push(filePath);
-  const tokens = git(root, args).split("\0");
+  const tokens = git(root, args, options).split("\0");
   const files = [];
   for (let index = 0; index < tokens.length;) {
     const statusToken = tokens[index++];
@@ -686,10 +699,10 @@ function readNameStatus(root, parentOid, commitOid, filePath) {
   return { files };
 }
 
-function readNumstat(root, parentOid, commitOid, filePath) {
+function readNumstat(root, parentOid, commitOid, filePath, options = {}) {
   const args = ["diff", "--numstat", "-z", "-M", parentOid, commitOid, "--"];
   if (filePath) args.push(filePath);
-  const tokens = git(root, args).split("\0");
+  const tokens = git(root, args, options).split("\0");
   const stats = new Map();
   for (let index = 0; index < tokens.length;) {
     const summary = tokens[index++];
@@ -712,10 +725,10 @@ function readNumstat(root, parentOid, commitOid, filePath) {
   return stats;
 }
 
-function buildCommitPatch(root, parentOid, commitOid, filePath, maxBytes) {
+function buildCommitPatch(root, parentOid, commitOid, filePath, maxBytes, options = {}) {
   const args = ["diff", "--no-ext-diff", "--binary", "--full-index", "--unified=3", parentOid, commitOid, "--"];
   if (filePath) args.push(filePath);
-  const raw = git(root, args);
+  const raw = git(root, args, options);
   const text = truncateUtf8(raw, maxBytes);
   return {
     requested: true,
@@ -739,7 +752,7 @@ function normalizeGitFilePath(value) {
   return value.trim().replace(/\\/g, "/");
 }
 
-function normalizeHistoryRef(root, value) {
+function normalizeHistoryRef(root, value, options = {}) {
   if (typeof value !== "string" || !value.trim()) {
     throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
   }
@@ -747,7 +760,7 @@ function normalizeHistoryRef(root, value) {
   if (!isFullRefName(ref)) {
     throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
   }
-  resolveCommit(root, ref);
+  resolveCommit(root, ref, options);
   return ref;
 }
 
@@ -891,20 +904,39 @@ function uniqueLines(lines) {
   return [...new Set(lines)];
 }
 
-function readBranch(root) {
-  const branch = git(root, ["branch", "--show-current"]).trim();
+function readBranch(root, options = {}) {
+  const branch = git(root, ["branch", "--show-current"], options).trim();
   return branch || "DETACHED";
 }
 
-function git(cwd, args) {
+function normalizeTimeoutMs(value) {
+  const normalized = value === undefined
+    ? DEFAULT_GIT_TIMEOUT_MS
+    : typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value.trim())
+        ? Number(value)
+        : NaN;
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 60000) {
+    throw new GitError("INVALID_TIMEOUT", "timeoutMs must be an integer from 1 to 60000.");
+  }
+  return normalized;
+}
+
+function git(cwd, args, options = {}) {
+  const timeoutMs = normalizeTimeoutMs(options.timeoutMs);
   try {
     return execFileSync("git", args, {
       cwd: path.resolve(cwd),
       encoding: "utf8",
       stdio: ["ignore", "pipe", "pipe"],
       maxBuffer: 1024 * 1024 * 16,
+      timeout: timeoutMs,
     });
   } catch (error) {
+    if (error && (error.code === "ETIMEDOUT" || error.killed || error.signal === "SIGTERM")) {
+      throw new GitError("GIT_TIMEOUT", `Git command exceeded the ${timeoutMs}ms timeout.`, error);
+    }
     const stderr = error.stderr ? String(error.stderr).trim() : "";
     const message = stderr || `git ${args.join(" ")} failed`;
     if (/not a git repository/i.test(message)) {
@@ -917,11 +949,12 @@ function git(cwd, args) {
   }
 }
 
-function canGit(cwd, args) {
+function canGit(cwd, args, options = {}) {
   try {
-    git(cwd, args);
+    git(cwd, args, options);
     return true;
   } catch (_error) {
+    if (_error && _error.code === "GIT_TIMEOUT") throw _error;
     return false;
   }
 }

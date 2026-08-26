@@ -130,6 +130,10 @@ function listTools() {
           minimum: 1,
           maximum: 500,
         }),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
       }),
       outputSchema: toolOutputSchema(),
     },
@@ -138,6 +142,10 @@ function listTools() {
       description: "Return compact git status for a repository.",
       inputSchema: objectSchema({
         repo: stringProp("Repository path."),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
       }),
       outputSchema: toolOutputSchema(),
     },
@@ -166,6 +174,10 @@ function listTools() {
           minimum: 256,
           maximum: 1048576,
         }),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
         includePatch: {
           type: "boolean",
           description: "Include a bounded diff patch for the current selection.",
@@ -188,6 +200,10 @@ function listTools() {
         message: stringProp("Literal commit subject/body filter."),
         since: stringProp("Git-compatible lower time bound."),
         until: stringProp("Git-compatible upper time bound."),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
       }),
       outputSchema: toolOutputSchema(),
     },
@@ -210,6 +226,10 @@ function listTools() {
           minimum: 256,
           maximum: 1048576,
         }),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
         includePatch: {
           type: "boolean",
           description: "Include a bounded unified patch body.",
@@ -229,6 +249,10 @@ function listTools() {
           maximum: 100,
         }),
         cursor: stringProp("Opaque cursor returned by a previous history page."),
+        timeoutMs: numberProp("Maximum time for each Git process. Defaults to 5000ms.", {
+          minimum: 1,
+          maximum: 60000,
+        }),
       }, ["path"]),
       outputSchema: toolOutputSchema(),
     },
@@ -315,9 +339,9 @@ function callTool(params) {
   const args = params.arguments || {};
 
   if (name === "git_graph") {
-    const repo = resolveRepo(args.repo);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
     const limit = normalizeLimit(args.limit);
-    const context = getGitContext(repo, limit);
+    const context = getGitContext(repo, limit, { timeoutMs: args.timeoutMs });
     const rows = buildGraphRows(context.commits);
     const textGraph = renderGraphText(context, rows);
     return jsonToolResult({
@@ -330,13 +354,13 @@ function callTool(params) {
   }
 
   if (name === "git_status") {
-    const repo = resolveRepo(args.repo);
-    const context = getGitContext(repo, 1);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
+    const context = getGitContext(repo, 1, { timeoutMs: args.timeoutMs });
     return jsonToolResult({
       repo: context.root,
       head: context.head,
       branch: context.branch,
-      status: getGitStatus(context.root),
+      status: getGitStatus(context.root, { timeoutMs: args.timeoutMs }),
     });
   }
 
@@ -351,17 +375,18 @@ function callTool(params) {
   }
 
   if (name === "git_context_bundle") {
-    const repo = resolveRepo(args.repo);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
     return jsonToolResult(buildContextBundle(repo, {
       maxCommits: args.maxCommits,
       maxFiles: args.maxFiles,
       maxBytes: args.maxBytes,
       includePatch: args.includePatch,
+      timeoutMs: args.timeoutMs,
     }));
   }
 
   if (name === "git_search_commits") {
-    const repo = resolveRepo(args.repo);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
     return jsonToolResult(searchCommits(repo, {
       pageSize: args.pageSize,
       cursor: args.cursor,
@@ -370,27 +395,30 @@ function callTool(params) {
       message: args.message,
       since: args.since,
       until: args.until,
+      timeoutMs: args.timeoutMs,
     }));
   }
 
   if (name === "git_commit_diff") {
-    const repo = resolveRepo(args.repo);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
     return jsonToolResult(readCommitDiff(repo, args.commit, {
       path: args.path,
       parent: args.parent,
       maxFiles: args.maxFiles,
       maxBytes: args.maxBytes,
       includePatch: args.includePatch,
+      timeoutMs: args.timeoutMs,
     }));
   }
 
   if (name === "git_file_history") {
-    const repo = resolveRepo(args.repo);
+    const repo = resolveRepo(args.repo, { timeoutMs: args.timeoutMs });
     return jsonToolResult(readFileHistory(repo, {
       path: args.path,
       ref: args.ref,
       pageSize: args.pageSize,
       cursor: args.cursor,
+      timeoutMs: args.timeoutMs,
     }));
   }
 
@@ -503,6 +531,7 @@ function normalizeToolError(error) {
   if (error && typeof error.code === "string") {
     const publicCodes = new Set([
       "GIT_COMMAND_FAILED",
+      "GIT_TIMEOUT",
       "BRANCH_ALREADY_EXISTS",
       "INVALID_RESET_MODE",
       "INVALID_BRANCH_NAME",
@@ -512,6 +541,7 @@ function normalizeToolError(error) {
       "INVALID_REVISION",
       "INVALID_SELECTION_FILE",
       "INVALID_CONTEXT_BUDGET",
+      "INVALID_TIMEOUT",
       "INVALID_RESOURCE_URI",
       "INVALID_REF",
       "INVALID_SEARCH_FILTER",

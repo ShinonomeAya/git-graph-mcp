@@ -26,10 +26,10 @@ class ContextError extends Error {
 
 function buildContextBundle(root, options = {}) {
   const startedAt = Date.now();
-  const repo = resolveRepo(root);
   const budget = normalizeBudget(options);
-  const gitContext = getGitContext(repo, budget.maxCommits + 1);
-  const gitStatus = getGitStatus(repo);
+  const repo = resolveRepo(root, { timeoutMs: budget.timeoutMs });
+  const gitContext = getGitContext(repo, budget.maxCommits + 1, { timeoutMs: budget.timeoutMs });
+  const gitStatus = getGitStatus(repo, { timeoutMs: budget.timeoutMs });
   const rawSelection = readSelection(repo);
   const warnings = [];
 
@@ -100,7 +100,7 @@ function buildContextBundle(root, options = {}) {
 
   let patch = null;
   if (budget.includePatch) {
-    patch = buildPatch(repo, selectionState, selection, gitContext.headOid, budget.maxBytes);
+    patch = buildPatch(repo, selectionState, selection, gitContext.headOid, budget.maxBytes, budget.timeoutMs);
   }
 
   const content = {
@@ -146,6 +146,7 @@ function normalizeBudget(options) {
     maxCommits: boundedInteger(input.maxCommits, "maxCommits", DEFAULT_BUDGET.maxCommits, 1, 100),
     maxFiles: boundedInteger(input.maxFiles, "maxFiles", DEFAULT_BUDGET.maxFiles, 1, 500),
     maxBytes: boundedInteger(input.maxBytes, "maxBytes", DEFAULT_BUDGET.maxBytes, 256, 1024 * 1024),
+    timeoutMs: boundedInteger(input.timeoutMs, "timeoutMs", 5000, 1, 60000),
     includePatch: input.includePatch === undefined ? DEFAULT_BUDGET.includePatch : input.includePatch === true,
   };
 }
@@ -161,13 +162,13 @@ function boundedInteger(value, name, fallback, minimum, maximum) {
   return normalized;
 }
 
-function buildPatch(repo, selectionState, selection, headOid, maxBytes) {
+function buildPatch(repo, selectionState, selection, headOid, maxBytes, timeoutMs) {
   if (selectionState !== "valid" || !selection || !headOid) {
     return { requested: true, text: "", bytes: 0, truncated: false };
   }
   const left = selection.kind === "range" ? selection.baseOid : selection.oid;
   const right = selection.kind === "range" ? selection.headOid : headOid;
-  const raw = readDiff(repo, left, right);
+  const raw = readDiff(repo, left, right, { timeoutMs });
   const text = truncateUtf8(raw, maxBytes);
   return {
     requested: true,

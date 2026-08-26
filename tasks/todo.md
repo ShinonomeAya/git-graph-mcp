@@ -682,14 +682,14 @@ on repeatable large fixtures, then optimize only failed paths.
 
 **Acceptance criteria:**
 
-- [ ] Benchmarks define reproducible budgets without using the development repo.
-- [ ] Slow Git processes time out or cancel with stable errors and no orphan process.
-- [ ] Caching/async changes are added only when a recorded budget is missed.
+- [x] Benchmarks define reproducible budgets without using the development repo.
+- [x] Slow Git processes time out or cancel with stable errors and no orphan process.
+- [x] Caching/async changes are added only when a recorded budget is missed; current budgets do not require either.
 
 **Verification:**
 
-- [ ] Benchmark smoke and timeout/cancellation integration tests pass on Windows/Linux.
-- [ ] `npm run check` remains deterministic and does not include long benchmarks.
+- [x] Benchmark smoke and timeout/cancellation integration tests pass on Windows/Linux.
+- [x] `npm run check` remains deterministic and does not include long benchmarks.
 
 **Dependencies:** T23
 
@@ -705,10 +705,10 @@ on repeatable large fixtures, then optimize only failed paths.
 
 ## Checkpoint G: v0.4 read-only exploration
 
-- [ ] T21–T24 acceptance criteria pass.
-- [ ] Search/diff/file history are deterministic and bounded.
-- [ ] Resources and tools remain schema-compatible.
-- [ ] No database, daemon, HTTP listener, or new write action exists.
+- [x] T21–T24 acceptance criteria pass.
+- [x] Search/diff/file history are deterministic and bounded.
+- [x] Resources and tools remain schema-compatible.
+- [x] No database, daemon, HTTP listener, or new write action exists.
 
 ## T25: Bind action plans to repository state
 

@@ -24,6 +24,8 @@
     "test:integration": "node --test test/integration/cli-graph.test.js test/integration/git-repositories.test.js test/integration/mcp-stdio.test.js test/integration/package.test.js test/integration/safe-actions.test.js test/integration/worktree-selection.test.js",
     "test:package": "node --test test/integration/package.test.js",
     "test:package-install": "node --test scripts/package-install.test.js",
+    "test:benchmark": "node --test scripts/benchmark-large-repo.test.js",
+    "benchmark:large": "node ./scripts/benchmark-large-repo.js --smoke",
     "test": "node --test test/unit/actions.test.js test/unit/context.test.js test/unit/git.test.js test/unit/graph.test.js test/unit/mcp.test.js test/unit/state.test.js test/unit/tui.test.js test/integration/cli-graph.test.js test/integration/git-repositories.test.js test/integration/mcp-stdio.test.js test/integration/package.test.js test/integration/safe-actions.test.js test/integration/worktree-selection.test.js",
     "smoke": "node ./bin/git-graph-mcp.js graph --plain --limit 8",
     "check": "npm run check:syntax && npm test && npm run smoke && npm run test:package"
