@@ -904,7 +904,7 @@ create a patch release only when post-`v0.2.0` code fixes require it.
 **Verification:**
 
 - [x] `npm pack --dry-run --json`, path/secret scan, and `git diff --check` pass.
-- [x] Release review records the exact commit `849bbab` and CI run `32955420207`.
+- [x] Release review records the v0.2.1 commit `0ac0b4d` and CI run `32957109919`.
 
 **Dependencies:** T30, T31
 
@@ -917,7 +917,7 @@ technical gates pass and the user explicitly confirms the final visibility actio
 
 **Acceptance criteria:**
 
-- [ ] Repository visibility changes only after explicit confirmation.
+- [x] Repository visibility changes only after explicit confirmation.
 - [ ] Public README, release, security policy, and issue/reporting path are reachable.
 - [ ] Post-launch smoke and rollback verification are recorded.
 

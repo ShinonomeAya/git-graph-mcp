@@ -1,7 +1,7 @@
 # v0.2.1 发布前验收记录
 
-状态：技术门禁已通过，当前包版本为 `0.2.1`；仓库仍为私有，`v0.2.0` tag/Release
-保持不变，v0.2.1 tag/Release 待最终 CI 通过后创建，npm 仍不发布。
+状态：技术门禁已通过，`v0.2.1` tag/Release 已创建；仓库仍为私有，`v0.2.0`
+tag/Release 保持不变，npm 仍不发布，下一步执行公开和匿名验收。
 
 ## 1. 验收目标
 
@@ -93,9 +93,9 @@ node .\bin\git-graph-mcp.js graph --limit 8
 阶段 C：PASS；GitHub Actions run 32955420207，Windows/Ubuntu × Node 22/24
 阶段 D：PASS；包 allowlist、diff check、路径/秘密扫描
 阶段 E：待用户；Claude Code 实际 /mcp 页面截图和一次只读调用
-版本/tag/Release：v0.2.0 已存在且保持不变
+版本/tag/Release：v0.2.1 已创建；v0.2.0 保持不变
 仓库可见性：仍为私有
-阻塞项：若公开最新 master，需先决定是否创建 v0.2.1；然后再确认公开动作
+阻塞项：公开动作已确认，待执行仓库可见性切换和匿名验收
 ```
 
 ## 5. 放行规则

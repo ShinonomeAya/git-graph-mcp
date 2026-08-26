@@ -1,8 +1,7 @@
 # Release Candidate Readiness
 
-状态：v0.2.1 补丁候选已准备，GitHub 仓库当前仍为私有；`v0.2.0` tag 和
-Release 已存在且保持不变，npm 未发布。v0.2.1 的 tag/Release 将在本轮最终
-CI 通过后创建。
+状态：v0.2.1 补丁 Release 已创建，GitHub 仓库当前仍为私有；`v0.2.0` tag 和
+Release 保持不变，npm 未发布。下一步是执行已确认的仓库公开和匿名验收。
 
 ## 当前基线
 
@@ -11,7 +10,7 @@ CI 通过后创建。
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；
 - 默认 Git 读取保持只读，reset 只生成计划，分支创建需要显式调用；
-- 当前维护分支包含 T28–T32 修复，不移动已发布的 `v0.2.0`。
+- 当前维护分支包含 T28–T32 修复；`v0.2.0` 不移动，公开版本为 `v0.2.1`。
 
 ## 已验证证据
 
@@ -27,7 +26,7 @@ CI 通过后创建。
   与调用契约通过；
 - `test/integration/safe-actions.test.js`、`test/unit/actions.test.js`：分支动作在计划
   过期、脏状态、HEAD 或 ref 漂移时拒绝且不改变 refs/index/worktree；
-- GitHub Actions run `32955420207`：Windows/Ubuntu × Node 22/24 的 package install、
+- GitHub Actions run `32957109919`：Windows/Ubuntu × Node 22/24 的 package install、
   check 和官方 registry audit 全部通过，且 checkout/setup-node 已切换到维护中的
   action runtime。
 
@@ -36,8 +35,8 @@ CI 通过后创建。
 1. [x] 本地实现、测试、打包 allowlist 和安全边界审查；
 2. [x] `SECURITY.md`、`CONTRIBUTING.md`、README 和 capability map 与实现一致；
 3. [x] 用户批准以 `0.2.1` 作为包含后续修复的公开版本；
-4. [ ] `0.2.1` 版本、tag 和 GitHub Release 创建完成；
-5. [ ] 用户批准将仓库公开；
+4. [x] `0.2.1` 版本、tag 和 GitHub Release 创建完成；
+5. [x] 用户批准将仓库公开；
 6. [ ] 用户批准 npm publish（当前默认不发布）。
 
 ## 回滚与禁止自动执行
