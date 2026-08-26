@@ -234,7 +234,7 @@ Git context with narrow and explicit safety boundaries.
 ### Phase 7: v0.3 human-approved context bundle
 
 - [x] T17 — Add selection schema v2 with v1-compatible reads.
-- T18 — Add commit/range/ref selection to the Git domain and CLI.
+- [x] T18 — Add commit/range/ref selection to the Git domain and CLI.
 - T19 — Add two-anchor range and ref selection to the TUI.
 - T20 — Add a budgeted `git_context_bundle` MCP tool.
 

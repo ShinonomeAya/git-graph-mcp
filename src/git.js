@@ -73,6 +73,50 @@ function resolveCommit(root, revision) {
   }
 }
 
+function resolveSelectionTarget(root, target) {
+  const resolvedRoot = resolveRepo(root);
+  if (!target || typeof target !== "object" || Array.isArray(target)) {
+    throw new GitError("INVALID_SELECTION_KIND", "A typed selection target is required.");
+  }
+
+  if (target.kind === "commit") {
+    return {
+      kind: "commit",
+      oid: resolveCommit(resolvedRoot, target.revision),
+    };
+  }
+
+  if (target.kind === "range") {
+    return {
+      kind: "range",
+      baseOid: resolveCommit(resolvedRoot, target.base),
+      headOid: resolveCommit(resolvedRoot, target.head),
+    };
+  }
+
+  if (target.kind === "ref") {
+    if (!isFullRefName(target.ref)) {
+      throw new GitError("INVALID_REF", "A full Git ref name such as refs/heads/main is required.");
+    }
+    return {
+      kind: "ref",
+      ref: target.ref,
+      oid: resolveCommit(resolvedRoot, target.ref),
+    };
+  }
+
+  throw new GitError("INVALID_SELECTION_KIND", "Selection kind must be one of: commit, range, ref.");
+}
+
+function isFullRefName(ref) {
+  return typeof ref === "string"
+    && /^refs\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(ref)
+    && !ref.includes("..")
+    && !ref.includes("//")
+    && !ref.includes("@{")
+    && !ref.endsWith("/");
+}
+
 function validateBranchName(root, name) {
   const resolvedRoot = resolveRepo(root);
   if (typeof name !== "string" || !name || name !== name.trim() || name.startsWith("-")) {
@@ -477,6 +521,7 @@ module.exports = {
   parseRefs,
   parseStatusLines,
   readCommit,
+  resolveSelectionTarget,
   validateBranchName,
   resolveCommit,
   resolveGitPath,

@@ -506,14 +506,14 @@ a full ref through typed CLI commands while preserving current commands.
 
 **Acceptance criteria:**
 
-- [ ] Range endpoints and refs resolve through Git and reject option-like revisions.
-- [ ] Existing `inspect`, `selected`, and `compare-selected` behavior remains compatible.
-- [ ] Machine commands emit one JSON document with schema version 2 selection data.
+- [x] Range endpoints and refs resolve through Git and reject option-like revisions.
+- [x] Existing `inspect`, `selected`, and `compare-selected` behavior remains compatible.
+- [x] Machine commands emit one JSON document with schema version 2 selection data.
 
 **Verification:**
 
-- [ ] `node --test test/unit/git.test.js test/integration/cli-graph.test.js test/integration/git-repositories.test.js` passes.
-- [ ] Fixture snapshots prove all selection operations leave refs/index/worktree unchanged.
+- [x] `node --test test/unit/git.test.js test/integration/cli-graph.test.js test/integration/git-repositories.test.js` passes.
+- [x] Fixture snapshots prove all selection operations leave refs/index/worktree unchanged.
 
 **Dependencies:** T17
 

@@ -4,6 +4,7 @@ const {
   getGitStatus,
   normalizeLimit,
   readCommit,
+  resolveSelectionTarget,
   resolveRepo,
 } = require("./git");
 const { buildGraphRows } = require("./graph");
@@ -66,6 +67,9 @@ async function runCli(argv) {
     if (!selection) {
       throw new Error("No selected commit. Run `git-graph-mcp graph` and select a commit, or use `inspect <commit>` first.");
     }
+    if (!selection.selectedCommit) {
+      throw new Error("compare-selected supports commit and ref selections; use the range endpoints directly for a range comparison.");
+    }
     console.log(JSON.stringify(compareWithHead(context.root, selection.selectedCommit), null, 2));
     return;
   }
@@ -77,8 +81,27 @@ async function runCli(argv) {
     }
     const context = getGitContext(repo, 1);
     const commit = readCommit(context.root, hash);
-    writeSelection(context.root, commit);
-    console.log(JSON.stringify(commit, null, 2));
+    const saved = writeSelection(context.root, commit);
+    console.log(JSON.stringify({ ...commit, ...saved }, null, 2));
+    return;
+  }
+
+  if (command === "select") {
+    const kind = parsed.positionals[0];
+    const target = kind === "commit"
+      ? { kind, revision: parsed.positionals[1] }
+      : kind === "range"
+        ? { kind, base: parsed.positionals[1], head: parsed.positionals[2] }
+        : { kind, ref: parsed.positionals[1] };
+    const selection = resolveSelectionTarget(repo, target);
+    const commit = selection.kind === "commit" ? readCommit(repo, selection.oid) : null;
+    const saved = writeSelection(repo, {
+      schemaVersion: 2,
+      repoRoot: repo,
+      selection,
+      commit,
+    });
+    console.log(JSON.stringify(saved, null, 2));
     return;
   }
 
@@ -91,6 +114,7 @@ const OPTION_DEFINITIONS = {
   selected: { "--repo": "value", "--limit": "value" },
   "compare-selected": { "--repo": "value", "--limit": "value" },
   inspect: { "--repo": "value" },
+  select: { "--repo": "value" },
   mcp: {},
 };
 
@@ -122,11 +146,21 @@ function parseCommandArgs(command, args) {
     index += 1;
   }
 
-  if (command !== "inspect" && positionals.length > 0) {
+  if (command !== "inspect" && command !== "select" && positionals.length > 0) {
     throw new Error(`Unexpected argument: ${positionals[0]}`);
   }
   if (command === "inspect" && positionals.length > 1) {
     throw new Error(`Unexpected argument: ${positionals[1]}`);
+  }
+  if (command === "select") {
+    const kind = positionals[0];
+    const expected = { commit: 2, range: 3, ref: 2 }[kind];
+    if (!expected) {
+      throw new Error("Usage: git-graph-mcp select <commit|range|ref> <value> [value] [--repo <path>]");
+    }
+    if (positionals.length !== expected) {
+      throw new Error(`Usage: git-graph-mcp select ${kind} ${kind === "range" ? "<base> <head>" : kind === "ref" ? "<full-ref>" : "<revision>"} [--repo <path>]`);
+    }
   }
 
   return { options, positionals };

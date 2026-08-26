@@ -1,10 +1,13 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
 
+const { commitFile, createTempRepo } = require("../helpers/git-repo");
+
 const {
   GitError,
   normalizeLimit,
   parseStatusLines,
+  resolveSelectionTarget,
   resolveRepo,
 } = require("../../src/git");
 
@@ -46,4 +49,52 @@ test("resolveRepo normalizes a Git directory and reports stable path errors", ()
     () => resolveRepo("C:/path/that/does/not/exist/git-graph-mcp"),
     (error) => error instanceof GitError && error.code === "INVALID_REPO_PATH"
   );
+});
+
+test("resolveSelectionTarget returns immutable commit, range, and full-ref selections", () => {
+  const repo = createTempRepo();
+  try {
+    const baseOid = commitFile(repo, "one.txt", "one\n", "one");
+    const headOid = commitFile(repo, "two.txt", "two\n", "two");
+    const branch = repo.runGit(["branch", "--show-current"]).trim();
+    const ref = `refs/heads/${branch}`;
+
+    assert.deepEqual(resolveSelectionTarget(repo.root, { kind: "commit", revision: baseOid }), {
+      kind: "commit",
+      oid: baseOid,
+    });
+    assert.deepEqual(resolveSelectionTarget(repo.root, { kind: "range", base: baseOid, head: headOid }), {
+      kind: "range",
+      baseOid,
+      headOid,
+    });
+    assert.deepEqual(resolveSelectionTarget(repo.root, { kind: "ref", ref }), {
+      kind: "ref",
+      ref,
+      oid: headOid,
+    });
+  } finally {
+    repo.cleanup();
+  }
+});
+
+test("resolveSelectionTarget rejects option-like revisions and non-full refs", () => {
+  const repo = createTempRepo();
+  try {
+    const oid = commitFile(repo, "one.txt", "one\n", "one");
+    assert.throws(
+      () => resolveSelectionTarget(repo.root, { kind: "commit", revision: "--all" }),
+      (error) => error instanceof GitError && error.code === "INVALID_REVISION"
+    );
+    assert.throws(
+      () => resolveSelectionTarget(repo.root, { kind: "range", base: oid, head: "-HEAD" }),
+      (error) => error instanceof GitError && error.code === "INVALID_REVISION"
+    );
+    assert.throws(
+      () => resolveSelectionTarget(repo.root, { kind: "ref", ref: "main" }),
+      (error) => error instanceof GitError && error.code === "INVALID_REF"
+    );
+  } finally {
+    repo.cleanup();
+  }
 });

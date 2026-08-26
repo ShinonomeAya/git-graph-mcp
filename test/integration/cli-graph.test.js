@@ -74,6 +74,8 @@ test("CLI selection workflow returns one JSON document per machine command", () 
 
     const inspect = runCli(["inspect", selectedOid, "--repo", repo.root], PROJECT_ROOT);
     assert.equal(inspect.status, 0, inspect.stderr);
+    assert.equal(JSON.parse(inspect.stdout).schemaVersion, 2);
+    assert.equal(JSON.parse(inspect.stdout).selection.oid, selectedOid);
     assert.equal(JSON.parse(inspect.stdout).selectedCommit, selectedOid);
 
     const selected = runCli(["selected", "--repo", repo.root], PROJECT_ROOT);
@@ -93,5 +95,32 @@ test("CLI selection workflow returns one JSON document per machine command", () 
   } finally {
     repo.cleanup();
     assert.deepEqual(gitSnapshot(PROJECT_ROOT), developmentBefore);
+  }
+});
+
+test("typed CLI selection resolves commit, range, and full ref without changing Git state", () => {
+  const repo = createTempRepo();
+  try {
+    const baseOid = commitFile(repo, "one.txt", "one\n", "one");
+    const headOid = commitFile(repo, "two.txt", "two\n", "two");
+    const branch = execFileSync("git", ["branch", "--show-current"], { cwd: repo.root, encoding: "utf8" }).trim();
+    const ref = `refs/heads/${branch}`;
+    const before = gitSnapshot(repo.root);
+
+    const commit = runCli(["select", "commit", baseOid, "--repo", repo.root], PROJECT_ROOT);
+    assert.equal(commit.status, 0, commit.stderr);
+    assert.deepEqual(JSON.parse(commit.stdout).selection, { kind: "commit", oid: baseOid });
+
+    const range = runCli(["select", "range", baseOid, headOid, "--repo", repo.root], PROJECT_ROOT);
+    assert.equal(range.status, 0, range.stderr);
+    assert.deepEqual(JSON.parse(range.stdout).selection, { kind: "range", baseOid, headOid });
+
+    const refSelection = runCli(["select", "ref", ref, "--repo", repo.root], PROJECT_ROOT);
+    assert.equal(refSelection.status, 0, refSelection.stderr);
+    assert.deepEqual(JSON.parse(refSelection.stdout).selection, { kind: "ref", ref, oid: headOid });
+
+    assert.deepEqual(gitSnapshot(repo.root), before);
+  } finally {
+    repo.cleanup();
   }
 });
