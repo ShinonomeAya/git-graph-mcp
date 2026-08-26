@@ -1,6 +1,6 @@
 # v0.2 Release Candidate Handoff
 
-状态：候选已准备，待本次推送后的 CI 结果；尚未发布
+状态：候选四格 CI 已通过；尚未发布
 
 ## 当前基线
 
@@ -9,7 +9,7 @@
 - 目标候选版本：`0.2.0`，需人工放行后才修改
 - 当前状态：代码、测试和本地打包链路已完成；本次候选 commit/push 已获批准
 - 私有远端：`https://github.com/ShinonomeAya/git-graph-mcp`，已配置为本地
-  `origin`，本次候选推送后将触发 CI
+  `origin`，候选 `master` 已推送至提交 `3224cd8`
 
 ## 已完成证据
 
@@ -21,13 +21,14 @@
 - Claude Code 项目级连接：`git-graph` 为 `Connected`；
 - 官方 npm registry 安全审计：0 vulnerabilities；
 - npm 包 allowlist 和 Windows TTY 验收通过。
+- GitHub Actions run `32940965021`：Windows/Ubuntu × Node 22/24 四格全部通过。
 
 ## 外部放行前置条件
 
-1. 将本次候选提交推送到私有 remote，运行 Windows/Ubuntu × Node 22/24 四格 CI；
-2. 四格 CI 全部通过并记录构建结果；
+1. [x] 将本次候选提交推送到私有 remote，运行 Windows/Ubuntu × Node 22/24 四格 CI；
+2. [x] 四格 CI 全部通过并记录构建结果；
 3. 用户确认 `0.2.0` 版本、变更记录和发布窗口；
-4. 用户分别批准 commit、tag、push 和 npm publish。
+4. [x] 用户已批准并完成候选 commit/push；tag 和 npm publish 仍需单独批准。
 
 ## 回滚方案
 

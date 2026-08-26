@@ -1,6 +1,6 @@
 # git-graph-mcp v0.2 Task List
 
-Status: T15 candidate commit/push approved and in progress; T14 completed; dependency security remediation completed; Checkpoint D approved by self-review
+Status: T16 human release gate pending; T15 CI completed; T14 completed; dependency security remediation completed; Checkpoint D approved by self-review
 
 Rules for every task:
 
@@ -392,7 +392,7 @@ Rules for every task:
 
 **Acceptance criteria:**
 
-- [ ] CI runs `npm ci` and `npm run check` on Windows/Ubuntu with Node 22/24 and all entries pass.
+- [x] CI runs `npm ci` and `npm run check` on Windows/Ubuntu with Node 22/24 and all entries pass.
 - [x] The packed artifact passes clean-install CLI and official MCP client acceptance on Windows.
 - [x] The final audit finds no unapproved Git command path, machine-specific package content, or unintended working-tree change.
 
@@ -400,7 +400,7 @@ Rules for every task:
 
 - [x] `npm run check` passes locally on the available Node 20 migration environment; Node 22/24 CI remains pending.
 - [x] Official-registry production dependency audit reports zero vulnerabilities after the MCP SDK 1.30.0 upgrade.
-- [ ] CI results for all four matrix entries are recorded for human review.
+- [x] CI results for all four matrix entries are recorded for human review (`32940965021`, commit `3224cd8`).
 - [x] `git diff --check`, `git status --short`, and package contents are reviewed; no commit, tag, push, or publish is performed.
 
 **Dependencies:** T12
@@ -415,7 +415,7 @@ Rules for every task:
 
 - [ ] All task acceptance criteria are checked.
 - [ ] All module success criteria are satisfied.
-- [ ] CI, packaged install, Windows Terminal, and Claude Code evidence are available.
+- [x] CI, packaged install, Windows Terminal, and Claude Code connection evidence are available.
 - [ ] Human explicitly decides whether to bump version, commit, tag, push, and/or publish.
 
 ## T14: Execute the local release preflight
@@ -443,16 +443,16 @@ changing Git history.
 
 **Acceptance criteria:**
 
-- [ ] Windows/Ubuntu × Node 22/24 all pass `npm ci`, audit, and `npm run check`.
-- [ ] Results are recorded for review.
+- [x] Windows/Ubuntu × Node 22/24 all pass `npm ci`, audit, and `npm run check`.
+- [x] Results are recorded for review (`32940965021`, commit `3224cd8`).
 
 **Verification:**
 
 - [x] Windows temporary Node 22.23.2 and 24.19.0 direct test runs pass 44 tests.
 - [x] Windows temporary Node 22.23.2 and 24.19.0 clean package-install runs pass.
-- [ ] GitHub Actions matrix has four successful jobs.
+- [x] GitHub Actions matrix has four successful jobs.
 
-**Dependencies:** T14 and the newly created private remote; candidate push is approved, CI evidence remains pending
+**Dependencies:** T14 and the newly created private remote; CI evidence is complete
 
 ## T16: Human release gate
 

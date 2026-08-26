@@ -1,6 +1,6 @@
 # v0.2 剩余验收测试计划
 
-状态：T14 本机发布预检通过，候选 commit/push 已获批准，T15 外部 CI 证据待补
+状态：T14 本机发布预检通过，候选 commit/push 已完成，T15 四格 CI 已通过；仍待人工发布放行
 
 ## 1. 验收目标
 
@@ -85,8 +85,11 @@ stdout 只包含协议消息。
 
 | 操作系统 | Node.js 22 | Node.js 24 |
 |---|---:|---:|
-| Windows | 待运行 | 待运行 |
-| Ubuntu | 待运行 | 待运行 |
+| Windows | PASS | PASS |
+| Ubuntu | PASS | PASS |
+
+记录：GitHub Actions run `32940965021`，提交 `3224cd8`，四个矩阵 job
+均完成 `npm ci` 和 `npm run check`。
 
 每个格子必须完成 `npm ci` 和 `npm run check`。任一格失败则停止发布评审，
 记录失败日志后修复并重新运行。
@@ -146,10 +149,10 @@ rg -n -i "[A-Za-z]:\\\\Users\\\\|[A-Za-z]:\\\\Program Files\\\\|AppData" README.
   识别，状态已为 `Connected`；项目级 `.mcp.json` 与 stdio 启动参数验收通过；
 - Claude Code 的实际 `/mcp` 页面与一次只读工具调用仍建议由用户在客户端留存
   截图/结果，作为最终人工证据；
-- GitHub Actions 四格 Node 22/24 结果尚未取得；
+- GitHub Actions 四格 Node 22/24：PASS；run `32940965021`，提交 `3224cd8`；
 - 私有 GitHub 仓库 `ShinonomeAya/git-graph-mcp` 已创建，本地 `origin` 已配置；
-  本次候选 commit/push 已获批准，推送后等待四格 CI 启动并回填结果；
+  候选分支 `master` 已推送，远端分支指向 `3224cd8`；
 - 版本仍为 0.1.0；本次只提交并推送候选代码，升至 0.2.0、打 tag 和发布仍需
   后续人工批准；
 - Claude Code 实际 `/mcp` 连接需要在用户的 Claude Code 客户端中确认；
-- 在上述两项完成前，Checkpoint E 不通过。
+- Claude Code 实际 `/mcp` 页面截图和版本放行仍待人工确认，Checkpoint E 暂不通过。
