@@ -236,7 +236,7 @@ Git context with narrow and explicit safety boundaries.
 - [x] T17 — Add selection schema v2 with v1-compatible reads.
 - [x] T18 — Add commit/range/ref selection to the Git domain and CLI.
 - [x] T19 — Add two-anchor range and ref selection to the TUI.
-- T20 — Add a budgeted `git_context_bundle` MCP tool.
+- [x] T20 — Add a budgeted `git_context_bundle` MCP tool.
 
 ### Checkpoint F: context bundle
 
@@ -244,7 +244,7 @@ Git context with narrow and explicit safety boundaries.
 - Legacy v1 selection files remain readable.
 - All read paths preserve refs, index, worktree, and selection.
 - Bundle count/byte limits and `truncated` markers pass contract tests.
-- Human reviews the v0.3 contract before Phase 8.
+- User-directed continuation approves the v0.3 contract before Phase 8.
 
 ### Phase 8: v0.4 read-only history exploration
 

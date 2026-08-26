@@ -8,6 +8,7 @@ const {
   resolveRepo,
 } = require("./git");
 const { buildGraphRows, renderGraphAfter, renderLane } = require("./graph");
+const { buildContextBundle } = require("./context");
 const { readSelection, resolveSelection, writeSelection } = require("./state");
 const { debugLog } = require("./diagnostics");
 const { version: SERVER_VERSION } = require("../package.json");
@@ -111,6 +112,30 @@ function listTools() {
       outputSchema: toolOutputSchema(),
     },
     {
+      name: "git_context_bundle",
+      description: "Return a bounded, provenance-aware Git context bundle for the selected commit or range.",
+      inputSchema: objectSchema({
+        repo: stringProp("Repository path."),
+        maxCommits: numberProp("Maximum graph commits. Defaults to 20.", {
+          minimum: 1,
+          maximum: 100,
+        }),
+        maxFiles: numberProp("Maximum changed files. Defaults to 50.", {
+          minimum: 1,
+          maximum: 500,
+        }),
+        maxBytes: numberProp("Maximum bundle content bytes. Defaults to 32768.", {
+          minimum: 256,
+          maximum: 1048576,
+        }),
+        includePatch: {
+          type: "boolean",
+          description: "Include a bounded diff patch for the current selection.",
+        },
+      }),
+      outputSchema: toolOutputSchema(),
+    },
+    {
       name: "git_inspect_commit",
       description: "Inspect a commit and save it as the current AI-readable selection.",
       inputSchema: objectSchema({
@@ -190,6 +215,16 @@ function callTool(params) {
       selectedCommit: null,
       message: "No commit has been selected yet. Run the terminal graph and select a commit, or call git_inspect_commit.",
     });
+  }
+
+  if (name === "git_context_bundle") {
+    const repo = resolveRepo(args.repo);
+    return jsonToolResult(buildContextBundle(repo, {
+      maxCommits: args.maxCommits,
+      maxFiles: args.maxFiles,
+      maxBytes: args.maxBytes,
+      includePatch: args.includePatch,
+    }));
   }
 
   if (name === "git_inspect_commit") {
@@ -309,6 +344,7 @@ function normalizeToolError(error) {
       "INVALID_REPO_PATH",
       "INVALID_REVISION",
       "INVALID_SELECTION_FILE",
+      "INVALID_CONTEXT_BUDGET",
       "NO_HEAD",
       "NO_SELECTION",
       "NOT_GIT_REPOSITORY",

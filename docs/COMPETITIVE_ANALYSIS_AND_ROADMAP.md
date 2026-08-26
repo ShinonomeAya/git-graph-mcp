@@ -302,7 +302,7 @@ Terminal TUI / CLI           +---- MCP tool ---------+---- MCP resource
 1. T17：selection schema v2 与 v1 兼容读取；
 2. T18：Git 域与 CLI 支持 commit/range/ref 选择；
 3. T19：TUI 支持设置起点、终点和 ref 选择；
-4. T20：新增受预算约束的 `git_context_bundle`。
+4. T20：新增受预算约束的 `git_context_bundle`（已完成，含 MCP stdio 验收）。
 
 Checkpoint：同一选择在 TUI、CLI 和 MCP 中 oid 完全一致；旧 v1 文件仍可读；所有
 读取保持 Git 状态不变；上下文包不能超过声明的数量和字节预算。

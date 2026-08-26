@@ -396,6 +396,24 @@ function compareWithHead(root, revision) {
     : null;
   if (!headOid) throw new GitError("NO_HEAD", "The repository has no commits yet.");
 
+  return compareResolvedRevisions(resolvedRoot, selectedOid, headOid);
+}
+
+function compareRevisions(root, leftRevision, rightRevision) {
+  const resolvedRoot = resolveRepo(root);
+  const leftOid = resolveCommit(resolvedRoot, leftRevision);
+  const rightOid = resolveCommit(resolvedRoot, rightRevision);
+  return compareResolvedRevisions(resolvedRoot, leftOid, rightOid);
+}
+
+function readDiff(root, leftRevision, rightRevision) {
+  const resolvedRoot = resolveRepo(root);
+  const leftOid = resolveCommit(resolvedRoot, leftRevision);
+  const rightOid = resolveCommit(resolvedRoot, rightRevision);
+  return git(resolvedRoot, ["diff", "--no-ext-diff", "--unified=3", leftOid, rightOid]);
+}
+
+function compareResolvedRevisions(resolvedRoot, selectedOid, headOid) {
   const relation = classifyRelationship(resolvedRoot, selectedOid, headOid);
   const countParts = git(resolvedRoot, [
     "rev-list",
@@ -514,6 +532,7 @@ function canGit(cwd, args) {
 module.exports = {
   GitError,
   compareWithHead,
+  compareRevisions,
   createBranch,
   getGitContext,
   getGitStatus,
@@ -521,6 +540,7 @@ module.exports = {
   parseRefs,
   parseStatusLines,
   readCommit,
+  readDiff,
   resolveSelectionTarget,
   validateBranchName,
   resolveCommit,

@@ -563,14 +563,14 @@ through one bounded call.
 
 **Acceptance criteria:**
 
-- [ ] Results expose count/byte limits, provenance, generation time, and `truncated`.
-- [ ] Commit, range, stale, dirty, and divergent selections return distinct content.
-- [ ] Default results contain metadata/statistics only; patch content is explicit and bounded.
+- [x] Results expose count/byte limits, provenance, generation time, and `truncated`.
+- [x] Commit, range, stale, dirty, and divergent selections return distinct content.
+- [x] Default results contain metadata/statistics only; patch content is explicit and bounded.
 
 **Verification:**
 
-- [ ] Unit tests cover budget calculations and deterministic truncation.
-- [ ] Official SDK integration verifies the new tool and unchanged existing seven tools.
+- [x] Unit tests cover budget calculations and deterministic truncation.
+- [x] Official SDK integration verifies the new tool and unchanged existing seven tools.
 
 **Dependencies:** T19
 
@@ -586,10 +586,10 @@ through one bounded call.
 
 ## Checkpoint F: v0.3 context bundle
 
-- [ ] T17–T20 acceptance criteria pass.
-- [ ] TUI, CLI, and MCP return the same immutable selection oids.
-- [ ] v1 migration, worktrees, bundle budgets, and no-mutation snapshots pass.
-- [ ] Human approves the v0.3 public contract before Phase 8.
+- [x] T17–T20 acceptance criteria pass.
+- [x] TUI, CLI, and MCP return the same immutable selection oids.
+- [x] v1 migration, worktrees, bundle budgets, and no-mutation snapshots pass.
+- [x] User-directed continuation approves proceeding with the v0.3 contract into Phase 8.
 
 ## T21: Add selection and status MCP resources
 
