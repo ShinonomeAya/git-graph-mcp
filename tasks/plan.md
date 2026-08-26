@@ -306,12 +306,14 @@ T16 human release gate
 
 ## Phase 10: public-release readiness remediation
 
-The private `v0.2.0` GitHub Release exists, but it is not yet the public-release
-baseline. The latest four-cell CI run passed on Ubuntu Node 22, Ubuntu Node 24,
-and Windows Node 24; Windows Node 22 failed while removing a temporary test
-repository with `EBUSY`. The local Node 20 environment is migration-only. The
-release checklist and acceptance plan also contain historical pre-release text
-that must be reconciled before making the repository public.
+The private `v0.2.0` GitHub Release exists and remains immutable. T28–T32
+technical remediation is complete on `master`: bounded Windows cleanup, packed
+install/audit CI gates, reconciled public documents, maintained-runtime
+graph → select → MCP read → doctor evidence, and the release artifact/rollback
+review all pass. The local Node 20 environment remains migration-only. The only
+remaining product-release gates are the user's client-side `/mcp` evidence (a
+manual recommendation), the decision whether to create `v0.2.1` for the
+post-v0.2.0 fixes, and the final private-to-public visibility action.
 
 ### Definition of done for public release
 
@@ -331,34 +333,37 @@ that must be reconciled before making the repository public.
 
 ### Ordered remediation tasks
 
-1. **T28 — Make Windows test cleanup deterministic.** Add a bounded retry/backoff
+1. **T28 — Make Windows test cleanup deterministic [DONE].** Add a bounded retry/backoff
    cleanup helper for temporary Git repositories, preserve the original error
    after retries, and prove the search test can run repeatedly on Windows.
-2. **T29 — Strengthen CI release gates.** Run clean packed installation and the
+2. **T29 — Strengthen CI release gates [DONE].** Run clean packed installation and the
    official-registry high-severity audit in CI; keep the four runtime cells
    explicit and fail the workflow on either packaging or audit failure.
-3. **T30 — Reconcile public documentation.** Update stale 44-test/0.1.0/
+3. **T30 — Reconcile public documentation [DONE].** Update stale 44-test/0.1.0/
    “not released” claims, document the current release and known Node baseline,
    and add the public support/reporting path without exposing private paths.
-4. **T31 — Re-run maintained-runtime acceptance.** Capture Windows Node 22/24
-   and Ubuntu Node 22/24 results plus a real MCP client graph/status call; keep
-   the local Node 20 warning clearly separate from support evidence.
-5. **T32 — Prepare the public-release gate.** Build a clean release artifact,
-   verify repository/package allowlists and rollback instructions, then create
-   `v0.2.1` only if code fixes are required. Do not move `v0.2.0`.
+4. **T31 — Re-run maintained-runtime acceptance [AUTOMATED DONE].** Capture
+   Windows Node 22/24 and Ubuntu Node 22/24 results plus the clean-install
+   graph/select/MCP/doctor path; a real client-side graph/status call remains a
+   manual evidence recommendation, and the local Node 20 warning stays separate.
+5. **T32 — Prepare the public-release gate [DONE].** Build a clean release artifact,
+   verify repository/package allowlists and rollback instructions, and record
+   `v0.2.0` immutability. Because fixes landed after that tag, `v0.2.1` is
+   identified but not created until the user chooses the public target. Do not
+   move `v0.2.0`.
 6. **T33 — Execute the visibility decision.** After T28–T32 pass, change the
    repository to public only with explicit confirmation; verify the public
    README, release, security policy, issue/reporting path, and install flow.
 
 ### Checkpoints
 
-- **Checkpoint I — deterministic test base:** T28 focused tests and local full
+- **Checkpoint I — deterministic test base [PASS]:** T28 focused tests and local full
   check pass; no unrelated files are changed.
-- **Checkpoint J — release CI gate:** T29 and T31 are green in all four cells;
+- **Checkpoint J — release CI gate [PASS]:** T29 and T31 are green in all four cells;
   package install, audit, MCP handshake, and user-path evidence are recorded.
-- **Checkpoint K — public review:** T30/T32 are complete, release/tag strategy
+- **Checkpoint K — public review [PASS]:** T30/T32 are complete, release/tag strategy
   is explicit, and no private path or secret appears in public artifacts.
-- **Checkpoint L — public launch:** T33 is the final external mutation; after it,
+- **Checkpoint L — public launch [PENDING USER CONFIRMATION]:** T33 is the final external mutation; after it,
   verify the public repository and release, then monitor issue reports for the
   first release window.
 
