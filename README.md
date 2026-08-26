@@ -1,5 +1,7 @@
 # git-graph-mcp
 
+**语言：** 简体中文 | [English](README.en.md)
+
 一个本地优先的 Git 提交图终端工具，同时提供标准 MCP stdio 服务。它让人
 在终端选择提交或范围，再让 Claude Code、Codex、Cursor 等 MCP 客户端读取
 同一份受预算约束的 Git 上下文。

@@ -15,10 +15,11 @@ test("npm package contains only the portable runtime allowlist", () => {
   const report = JSON.parse(result.stdout);
   assert.equal(report.length, 1);
   const files = report[0].files.map((entry) => entry.path.replaceAll("\\", "/"));
-  const allowed = new Set(["package.json", "README.md", "LICENSE"]);
+  const allowed = new Set(["package.json", "README.md", "README.en.md", "LICENSE"]);
 
   assert.ok(files.includes("package.json"));
   assert.ok(files.includes("README.md"));
+  assert.ok(files.includes("README.en.md"));
   assert.ok(files.includes("LICENSE"));
   assert.ok(files.some((file) => file.startsWith("bin/")));
   assert.ok(files.some((file) => file.startsWith("src/")));
