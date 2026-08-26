@@ -303,3 +303,78 @@ T16 human release gate
 - MCP resource subscriptions are deferred until tool/resource parity is proven.
 - Public repository visibility is optional and must not be inferred from npm or
   release readiness.
+
+## Phase 10: public-release readiness remediation
+
+The private `v0.2.0` GitHub Release exists, but it is not yet the public-release
+baseline. The latest four-cell CI run passed on Ubuntu Node 22, Ubuntu Node 24,
+and Windows Node 24; Windows Node 22 failed while removing a temporary test
+repository with `EBUSY`. The local Node 20 environment is migration-only. The
+release checklist and acceptance plan also contain historical pre-release text
+that must be reconciled before making the repository public.
+
+### Definition of done for public release
+
+- The exact release commit passes Windows/Ubuntu × Node 22/24, including clean
+  package installation and the official MCP handshake.
+- The Windows fixture cleanup is bounded and retry-safe; no test relies on a
+  best-effort deletion that can make a green run flaky.
+- README, changelog, release checklist, acceptance plan, capability map, and
+  CI workflow describe the same version, test count, tool count, and release
+  state.
+- Node 22/24 user-path evidence covers graph → select → MCP read and `doctor`;
+  paths/configuration values are not exposed in screenshots or logs.
+- Existing `v0.2.0` tag is never moved. Any code fix after that tag ships as a
+  new patch release (planned `v0.2.1`) after the gate passes.
+- Public visibility is changed only after the technical gate is green. npm
+  publication remains a separate decision and is not implied by GitHub release.
+
+### Ordered remediation tasks
+
+1. **T28 — Make Windows test cleanup deterministic.** Add a bounded retry/backoff
+   cleanup helper for temporary Git repositories, preserve the original error
+   after retries, and prove the search test can run repeatedly on Windows.
+2. **T29 — Strengthen CI release gates.** Run clean packed installation and the
+   official-registry high-severity audit in CI; keep the four runtime cells
+   explicit and fail the workflow on either packaging or audit failure.
+3. **T30 — Reconcile public documentation.** Update stale 44-test/0.1.0/
+   “not released” claims, document the current release and known Node baseline,
+   and add the public support/reporting path without exposing private paths.
+4. **T31 — Re-run maintained-runtime acceptance.** Capture Windows Node 22/24
+   and Ubuntu Node 22/24 results plus a real MCP client graph/status call; keep
+   the local Node 20 warning clearly separate from support evidence.
+5. **T32 — Prepare the public-release gate.** Build a clean release artifact,
+   verify repository/package allowlists and rollback instructions, then create
+   `v0.2.1` only if code fixes are required. Do not move `v0.2.0`.
+6. **T33 — Execute the visibility decision.** After T28–T32 pass, change the
+   repository to public only with explicit confirmation; verify the public
+   README, release, security policy, issue/reporting path, and install flow.
+
+### Checkpoints
+
+- **Checkpoint I — deterministic test base:** T28 focused tests and local full
+  check pass; no unrelated files are changed.
+- **Checkpoint J — release CI gate:** T29 and T31 are green in all four cells;
+  package install, audit, MCP handshake, and user-path evidence are recorded.
+- **Checkpoint K — public review:** T30/T32 are complete, release/tag strategy
+  is explicit, and no private path or secret appears in public artifacts.
+- **Checkpoint L — public launch:** T33 is the final external mutation; after it,
+  verify the public repository and release, then monitor issue reports for the
+  first release window.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Windows Git/process handle keeps a fixture directory busy | High | Retry cleanup with bounded delays and retain diagnostics; never hide test failures |
+| CI passes unit tests but misses packed-install regressions | High | Make `test:package-install` a required matrix step |
+| Historical docs contradict public behavior | Medium | Scan version/count/release claims before publishing |
+| Fix after an existing tag creates an unverifiable release | High | Keep `v0.2.0` immutable; use `v0.2.1` for fixes |
+| Public repository exposes local paths or private setup | High | Run path/secret scans and review README/release assets before visibility change |
+
+### Open decisions
+
+- Whether the public distribution is GitHub source/release only or also npm;
+- Whether the first public release should be the existing `v0.2.0` after a green
+  rerun or a corrected `v0.2.1` patch release;
+- Who owns first-release issue triage and the rollback decision.

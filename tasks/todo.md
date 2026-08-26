@@ -800,3 +800,151 @@ guide, and release checklist without changing repository visibility or publishin
 - [x] Stale action plans fail closed and no destructive executor exists.
 - [x] Clean-install onboarding completes graph → select → MCP read.
 - [x] Human separately decides public visibility, version, tag, release, and npm publication.
+
+## Phase 10: public-release readiness remediation
+
+### T28: Make Windows test cleanup deterministic
+
+**Description:** Remove the flaky `EBUSY` temporary-repository cleanup failure
+seen in Windows Node 22 CI without masking real test failures.
+
+**Acceptance criteria:**
+
+- [ ] Temporary Git fixture cleanup retries bounded, transient Windows lock errors.
+- [ ] Cleanup preserves the original failure after retries and leaves diagnostics.
+- [ ] Search/history fixture tests pass repeatedly without changing production behavior.
+
+**Verification:**
+
+- [ ] Focused Git tests pass locally and in Windows Node 22 CI.
+- [ ] Full `npm run check` remains green.
+
+**Dependencies:** T27
+
+**Files likely touched:** `test/helpers/git-repo.js`, `test/unit/git.test.js`, CI evidence
+
+**Estimated scope:** Small
+
+### T29: Strengthen CI release gates
+
+**Description:** Make clean packed installation and official-registry dependency
+audit required parts of every maintained-runtime matrix cell.
+
+**Acceptance criteria:**
+
+- [ ] CI runs `npm run test:package-install` on Windows/Ubuntu Node 22/24.
+- [ ] CI runs high-severity audit against `registry.npmjs.org` and fails on findings.
+- [ ] CI output identifies each matrix cell and its release-gate result.
+
+**Verification:**
+
+- [ ] All four matrix cells pass the expanded workflow.
+- [ ] Local package-install and audit commands pass.
+
+**Dependencies:** T28
+
+**Files likely touched:** `.github/workflows/ci.yml`, `package.json`, release docs
+
+**Estimated scope:** Small
+
+### T30: Reconcile public documentation
+
+**Description:** Remove stale pre-release claims and align README, changelog,
+acceptance, release, capability, security, and contribution documents.
+
+**Acceptance criteria:**
+
+- [ ] No public-facing document claims 44 tests, seven tools, version 0.1.0,
+  or an unreleased state for the current release.
+- [ ] Public support/reporting, runtime support, install flow, and rollback path
+  are explicit and free of machine-specific paths.
+
+**Verification:**
+
+- [ ] Version/count/path scan passes.
+- [ ] README install and doctor commands pass from a clean artifact.
+
+**Dependencies:** T29
+
+**Files likely touched:** `README.md`, `CHANGELOG.md`, `docs/`, `SECURITY.md`
+
+**Estimated scope:** Medium
+
+### T31: Re-run maintained-runtime acceptance
+
+**Description:** Record evidence for the supported Node 22/24 user path and a
+  real MCP client call, keeping Node 20 migration checks separate.
+
+**Acceptance criteria:**
+
+- [ ] Windows/Ubuntu Node 22/24 CI is green on the release commit.
+- [ ] Graph → select → MCP read and `doctor` are verified on a maintained runtime.
+- [ ] Evidence contains no repository paths, secrets, or private configuration values.
+
+**Verification:**
+
+- [ ] Official SDK integration and clean-install tests pass.
+- [ ] A client-side read-only call is recorded for release review.
+
+**Dependencies:** T29
+
+**Estimated scope:** Medium
+
+### T32: Prepare the public-release gate
+
+**Description:** Verify artifacts, allowlists, rollback, and immutable tag strategy;
+create a patch release only when post-`v0.2.0` code fixes require it.
+
+**Acceptance criteria:**
+
+- [ ] Existing `v0.2.0` tag is not moved.
+- [ ] Clean artifact, package allowlist, security scan, and rollback checklist pass.
+- [ ] Release version and distribution channel are explicitly recorded.
+
+**Verification:**
+
+- [ ] `npm pack --dry-run --json`, path/secret scan, and `git diff --check` pass.
+- [ ] Release review records the exact commit and CI run.
+
+**Dependencies:** T30, T31
+
+**Estimated scope:** Medium
+
+### T33: Execute the visibility decision
+
+**Description:** Change the private GitHub repository to public only after all
+technical gates pass and the user explicitly confirms the final visibility action.
+
+**Acceptance criteria:**
+
+- [ ] Repository visibility changes only after explicit confirmation.
+- [ ] Public README, release, security policy, and issue/reporting path are reachable.
+- [ ] Post-launch smoke and rollback verification are recorded.
+
+**Verification:**
+
+- [ ] Public anonymous repository/release/install checks pass.
+- [ ] First-release monitoring owner and rollback decision path are documented.
+
+**Dependencies:** T32
+
+**Estimated scope:** Small
+
+## Checkpoint I: deterministic public-release base
+
+- [ ] T28 focused cleanup and full local check pass.
+- [ ] No unrelated worktree changes are included.
+
+## Checkpoint J: maintained-runtime release gate
+
+- [ ] T29 CI gates and T31 four-cell evidence pass.
+- [ ] Clean install, audit, MCP handshake, and user path are green.
+
+## Checkpoint K: public review
+
+- [ ] T30/T32 documentation, artifact, path scan, and rollback review pass.
+- [ ] Existing `v0.2.0` remains immutable; any patch release is separately identified.
+
+## Checkpoint L: public launch
+
+- [ ] T33 visibility change and anonymous post-launch checks pass.
