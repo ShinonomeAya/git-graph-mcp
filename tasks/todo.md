@@ -877,7 +877,7 @@ acceptance, release, capability, security, and contribution documents.
 
 **Acceptance criteria:**
 
-- [x] Windows/Ubuntu Node 22/24 CI is green on the maintained commit (`15cea08`).
+- [x] Windows/Ubuntu Node 22/24 CI is green on the maintained commit (`849bbab`).
 - [x] Graph → select → MCP read and `doctor` are verified on a maintained runtime.
 - [x] Automated evidence contains no repository paths, secrets, or private configuration values.
 
