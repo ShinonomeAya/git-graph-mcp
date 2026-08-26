@@ -21,32 +21,82 @@ async function runTui(context, rows) {
   }
 
   let selected = 0;
-  let message = "Enter: inspect/select  j/k or arrows: move  s: save  q: quit";
+  let message = "Enter/s: save commit  b: range base  e: save range  r: save visible ref  j/k or arrows: move  q: quit";
+  let selectionDraft = null;
   let cleaned = false;
   let onKeypress;
   let onSigint;
+  let onResize;
 
   const cleanup = () => {
     if (cleaned) return;
     cleaned = true;
     if (onKeypress) process.stdin.off("keypress", onKeypress);
     if (onSigint) process.off("SIGINT", onSigint);
+    if (onResize && typeof process.stdout.off === "function") process.stdout.off("resize", onResize);
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
     if (typeof process.stdin.pause === "function") process.stdin.pause();
     process.stdout.write(SHOW_CURSOR);
   };
 
+  const currentCommit = () => visibleRows[selected] && visibleRows[selected].commit;
+
+  const renderDraft = () => {
+    if (!selectionDraft || selectionDraft.kind !== "range") return selectionDraft;
+    return buildRangeSelection(selectionDraft.baseOid, selectionDraft.headOid || (currentCommit() && currentCommit().hash));
+  };
+
   const render = () => {
     process.stdout.write(CLEAR);
-    process.stdout.write(renderStaticGraph(context, visibleRows, selected, message, true));
+    process.stdout.write(renderStaticGraph(context, visibleRows, selected, message, true, {
+      selectionDraft: renderDraft(),
+    }));
   };
 
   const selectCurrent = () => {
-    const commit = visibleRows[selected] && visibleRows[selected].commit;
+    const commit = currentCommit();
     if (!commit) return;
     const selection = readCommit(context.root, commit.hash);
     writeSelection(context.root, selection);
+    selectionDraft = null;
     message = `Selected ${commit.shortHash}: ${commit.subject}`;
+  };
+
+  const beginRange = () => {
+    const commit = currentCommit();
+    if (!commit) return;
+    selectionDraft = buildRangeSelection(commit.hash, null);
+    message = `Range base ${commit.shortHash}. Move to endpoint and press e to save.`;
+  };
+
+  const saveRange = () => {
+    const commit = currentCommit();
+    if (!selectionDraft || selectionDraft.kind !== "range") {
+      message = "Press b on a commit to set the range base first.";
+      return;
+    }
+    if (!commit) return;
+    const selection = buildRangeSelection(selectionDraft.baseOid, commit.hash);
+    writeSelection(context.root, {
+      schemaVersion: 2,
+      repoRoot: context.root,
+      selection,
+    });
+    selectionDraft = null;
+    message = `Selected range ${selection.baseOid.slice(0, 7)}..${selection.headOid.slice(0, 7)}`;
+  };
+
+  const selectVisibleRef = () => {
+    const commit = currentCommit();
+    if (!commit) return;
+    const selection = buildRefSelection(context, commit);
+    writeSelection(context.root, {
+      schemaVersion: 2,
+      repoRoot: context.root,
+      selection,
+    });
+    selectionDraft = null;
+    message = `Selected ref ${selection.ref}`;
   };
 
   const finish = () => {
@@ -62,6 +112,10 @@ async function runTui(context, rows) {
 
     onSigint = finish;
     process.once("SIGINT", onSigint);
+    onResize = () => {
+      if (!cleaned) render();
+    };
+    if (typeof process.stdout.on === "function") process.stdout.on("resize", onResize);
     onKeypress = (_input, key) => {
       if (!key || cleaned) return;
 
@@ -74,6 +128,24 @@ async function runTui(context, rows) {
         selected = moveSelection(selected, -1, visibleRows.length);
       } else if (key.name === "down" || key.name === "j") {
         selected = moveSelection(selected, 1, visibleRows.length);
+      } else if (key.name === "b") {
+        try {
+          beginRange();
+        } catch (error) {
+          message = error && error.message ? error.message : "Could not set range base.";
+        }
+      } else if (key.name === "e") {
+        try {
+          saveRange();
+        } catch (error) {
+          message = error && error.message ? error.message : "Could not save range selection.";
+        }
+      } else if (key.name === "r") {
+        try {
+          selectVisibleRef();
+        } catch (error) {
+          message = error && error.message ? error.message : "Could not save ref selection.";
+        }
       } else if (key.name === "return" || key.name === "s") {
         try {
           selectCurrent();
@@ -145,6 +217,18 @@ function renderStaticGraph(context, rows, selectedIndex = 0, footer, color = fal
     lines.push(truncateText(`Parents: ${(selectedCommit.parents || []).length}`, width));
   }
 
+  if (options.selectionDraft) {
+    lines.push("");
+    lines.push(truncateText(`Selection mode: ${String(options.selectionDraft.kind).toUpperCase()}`, width));
+    if (options.selectionDraft.kind === "range") {
+      lines.push(truncateText(`Range base: ${shortOid(options.selectionDraft.baseOid)}`, width));
+      lines.push(truncateText(`Range head: ${shortOid(options.selectionDraft.headOid)}`, width));
+    } else if (options.selectionDraft.kind === "ref") {
+      lines.push(truncateText(`Ref: ${options.selectionDraft.ref}`, width));
+      lines.push(truncateText(`Ref oid: ${shortOid(options.selectionDraft.oid)}`, width));
+    }
+  }
+
   lines.push("");
   lines.push(truncateText(dim + (footer || "Run without --plain for interactive TUI.") + reset, width));
   return lines.join("\n");
@@ -185,9 +269,45 @@ function terminalHeight() {
   return process.stdout.rows || 24;
 }
 
+function buildRangeSelection(baseOid, headOid) {
+  return { kind: "range", baseOid, headOid };
+}
+
+function resolveVisibleRef(context = {}, commit = {}) {
+  const displayedRef = Array.isArray(commit.refs) ? commit.refs.find(Boolean) : null;
+  if (displayedRef) {
+    if (displayedRef.startsWith("tag:")) return `refs/tags/${displayedRef.slice(4)}`;
+    if (displayedRef.startsWith("refs/")) return displayedRef;
+    if (displayedRef.startsWith("origin/") || displayedRef.startsWith("upstream/")) {
+      return `refs/remotes/${displayedRef}`;
+    }
+    return `refs/heads/${displayedRef}`;
+  }
+
+  if (context.branch && context.branch !== "DETACHED" && context.headOid === commit.hash) {
+    return `refs/heads/${context.branch}`;
+  }
+  throw new Error("No full ref is visible for this commit.");
+}
+
+function buildRefSelection(context, commit) {
+  return {
+    kind: "ref",
+    ref: resolveVisibleRef(context, commit),
+    oid: commit.hash,
+  };
+}
+
+function shortOid(oid) {
+  return typeof oid === "string" && oid ? oid.slice(0, 7) : "(pending)";
+}
+
 module.exports = {
+  buildRangeSelection,
+  buildRefSelection,
   moveSelection,
   pickWindow,
+  resolveVisibleRef,
   renderStaticGraph,
   runTui,
   truncateText,

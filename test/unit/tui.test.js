@@ -2,8 +2,11 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const {
+  buildRangeSelection,
+  buildRefSelection,
   moveSelection,
   pickWindow,
+  resolveVisibleRef,
   renderStaticGraph,
   truncateText,
 } = require("../../src/tui");
@@ -62,4 +65,53 @@ test("static graph output truncates long fields without changing commit data", (
   assert.match(output, /…/);
   assert.ok(output.split("\n").every((line) => line.length <= 36));
   assert.equal(truncateText("short", 10), "short");
+});
+
+test("range selection draft exposes both anchors and resolves a visible branch ref", () => {
+  const baseOid = "a".repeat(40);
+  const headOid = "b".repeat(40);
+  const current = commit(headOid, "head");
+  current.refs = ["main"];
+
+  assert.deepEqual(buildRangeSelection(baseOid, headOid), {
+    kind: "range",
+    baseOid,
+    headOid,
+  });
+  assert.equal(resolveVisibleRef({ branch: "main", headOid }, current), "refs/heads/main");
+  assert.deepEqual(buildRefSelection({ branch: "main", headOid }, current), {
+    kind: "ref",
+    ref: "refs/heads/main",
+    oid: headOid,
+  });
+
+  const output = renderStaticGraph(
+    { branch: "main", head: headOid.slice(0, 7), headOid, root: "C:/repo" },
+    [{ commit: current, lane: 0, lanes: [headOid], width: 1, isMerge: false }],
+    0,
+    "Move to endpoint and press e to save",
+    false,
+    {
+      width: 80,
+      height: 16,
+      selectionDraft: buildRangeSelection(baseOid, headOid),
+    }
+  );
+  assert.match(output, /Selection mode: RANGE/);
+  assert.match(output, new RegExp(`Range base: ${baseOid.slice(0, 7)}`));
+  assert.match(output, new RegExp(`Range head: ${headOid.slice(0, 7)}`));
+});
+
+test("visible ref resolution supports tags and rejects commits without a ref", () => {
+  const tagCommit = commit("c".repeat(40), "tagged");
+  tagCommit.refs = ["tag:v1.0.0"];
+  assert.equal(
+    resolveVisibleRef({ branch: "main", headOid: "d".repeat(40) }, tagCommit),
+    "refs/tags/v1.0.0"
+  );
+
+  assert.throws(
+    () => resolveVisibleRef({ branch: "DETACHED", headOid: tagCommit.hash }, commit("e".repeat(40), "none")),
+    /No full ref is visible/
+  );
 });

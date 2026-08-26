@@ -534,14 +534,14 @@ visible ref while keeping navigation, cleanup, and plain fallback deterministic.
 
 **Acceptance criteria:**
 
-- [ ] The active selection mode and both range endpoints are visible before save.
-- [ ] Saving a range/ref writes exactly the v2 contract produced by the CLI.
-- [ ] Quit, resize, invalid ref, and empty-history paths restore terminal state.
+- [x] The active selection mode and both range endpoints are visible before save.
+- [x] Saving a range/ref writes exactly the v2 contract produced by the CLI.
+- [x] Quit, resize, invalid ref, and empty-history paths restore terminal state.
 
 **Verification:**
 
-- [ ] `node --test test/unit/tui.test.js test/unit/graph.test.js test/integration/cli-graph.test.js` passes.
-- [ ] Manual Windows TTY check covers commit and range selection.
+- [x] `node --test test/unit/tui.test.js test/unit/graph.test.js test/integration/cli-graph.test.js` passes.
+- [x] Manual Windows TTY check covers commit and range selection.
 
 **Dependencies:** T18
 
