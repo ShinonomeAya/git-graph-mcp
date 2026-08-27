@@ -1,19 +1,19 @@
 # Release Candidate Readiness
 
-状态：`v0.2.2` 已通过本地发布门禁，待本次提交推送后创建正式 tag 和 GitHub
-Release；npm 未发布。
+状态：`v0.2.2` 已正式发布并完成上线后核验；npm 未发布。
 
 ## 当前基线
 
-- 发布包版本为 `0.2.2`，公开稳定包为 `0.2.1`，本次上线后切换为 `0.2.2`；
+- 发布包版本和当前公开稳定版均为 `0.2.2`；
 - 运行时基线为 Node.js 22+、Git on `PATH`；Node.js 20 仅作迁移检查；
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；
 - 默认 Git 读取保持只读，reset 只生成计划，分支创建需要显式调用；
-- `v0.2.0` 和 `v0.2.1` 均保持不可变；当前候选包含 T28–T33 之后的
+- `v0.2.0`、`v0.2.1` 和 `v0.2.2` 均保持不可变；本次版本包含 T28–T33 之后的
   双语 README、固定包安装说明、MCP 工具目录和社区入口补齐；
 - Release asset `git-graph-mcp-0.2.1.tgz` 已上传并完成 SHA256 校验；
-  `v0.2.2` asset 已在本地生成，推送后上传并复核下载摘要。
+  [`v0.2.2` Release](https://github.com/ShinonomeAya/git-graph-mcp/releases/tag/v0.2.2)
+  asset 已上传并完成下载摘要复核。
 
 ## 已验证证据
 
@@ -32,6 +32,9 @@ Release；npm 未发布。
 - 历史 GitHub Actions run `32957109919`：Windows/Ubuntu × Node 22/24 的 package install、
   check 和官方 registry audit 全部通过，且 checkout/setup-node 已切换到维护中的
   action runtime。
+- 当前 `master` CI run `33057318621` 和 `v0.2.2` tag CI run `33057337752`：
+  Windows/Ubuntu × Node 22/24 全部通过，包含 package install、check 和官方 registry audit。
+- Release 下载资产的 SHA-256/SHA-512 与本地构建值完全一致，GitHub asset 状态为 `uploaded`。
 - 本地 `v0.2.2` 候选 tarball：`git-graph-mcp-0.2.2.tgz`，SHA-256 为
   `F9D70A394E847AC6EC9C8CBA90188D7B0F8A829B53A32E6E638B937B47914A11`，
   SHA-512 为
@@ -53,7 +56,7 @@ Release；npm 未发布。
 2. [x] MCP specification 已与实现中的 12 个工具和 2 个 resources 对齐；
 3. [x] Code of Conduct、bug report 和 feature request 入口已加入；
 4. [x] 本地语法、测试、smoke、package allowlist 和 clean-install 门禁通过；
-5. [x] 候选 tarball SHA-256 已记录并通过人工复核；
+5. [x] tarball SHA-256/SHA-512 已记录并通过下载资产复核；
 6. [x] 用户批准推送、创建 `v0.2.2` tag、GitHub Release 和 Release asset；
 7. [ ] 用户另行批准 npm publish（默认不发布）。
 
@@ -63,4 +66,5 @@ Release；npm 未发布。
 `32957109919`。`v0.2.2` 必须使用新的不可变 tag，不得移动已有 tag。
 首小时监控负责人为仓库维护者 `ShinonomeAya`，回滚决策由同一维护者执行。若
 匿名 smoke、Release 下载或安装检查失败，先保留失败证据并撤下对应 Release；
-公开稳定版本回退目标仍为已验证且不可变的 `v0.2.1`。
+公开稳定版本为已验证且不可变的 `v0.2.2`；如需回滚，回退目标为同样不可变的
+`v0.2.1`。

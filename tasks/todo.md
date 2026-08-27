@@ -974,11 +974,13 @@ technical gates pass and the user explicitly confirms the final visibility actio
 - [x] Add bug-report and feature-request issue templates plus template config.
 - [ ] Prepare repository topics as a separate GitHub metadata action.
 
-### T38: Verify the candidate before external release
+### T38: Verify and publish v0.2.2
 
 - [x] Run syntax, unit/integration, smoke, package, and clean-install checks.
-- [x] Verify bilingual README packaging and compute the candidate SHA-256.
-- [ ] Hold push, tag, Release asset upload, and topics pending maintainer approval.
+- [x] Verify bilingual README packaging and compute the release SHA-256/SHA-512.
+- [x] Push `master`, create immutable `v0.2.2`, upload the Release asset, and verify the download.
+- [x] Verify `master` and `v0.2.2` GitHub Actions runs across Windows/Ubuntu × Node 22/24.
+- [ ] Keep npm publication and repository topics as separate maintainer decisions.
 
 ## Checkpoint M: public onboarding
 

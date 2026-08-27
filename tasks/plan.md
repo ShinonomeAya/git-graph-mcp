@@ -1,7 +1,7 @@
 # Implementation Plan: git-graph-mcp v0.2
 
-Status: v0.2.2 public-readiness candidate; local gates complete, external
-publication pending maintainer approval
+Status: v0.2.2 stable release published; local and GitHub gates complete; npm
+publication intentionally remains disabled
 
 ## Overview
 
@@ -344,21 +344,32 @@ moving `v0.2.1` or publishing to npm.
 - Record repository topics as a separate GitHub metadata action; do not encode
   them as fake files in the package.
 
-### T38 — Verify the candidate before external release [LOCAL DONE]
+### T38 — Verify the candidate before external release [DONE]
 
 - Run syntax, unit/integration, smoke, package, and clean-install checks.
 - Verify the packed allowlist contains the bilingual README and no private
   configuration.
 - Compute the candidate tarball SHA-256 and record it in the release checklist;
-  only then consider pushing, tagging `v0.2.2`, uploading the tarball, and
-  adding GitHub topics.
+  then push `master`, create the immutable `v0.2.2` tag, upload the tarball,
+  and verify the downloaded asset.
 
-### Checkpoint M: public onboarding [LOCAL PASS]
+### Checkpoint M: public onboarding [PASS]
 
 - A new user can choose source checkout or fixed Release asset without guessing.
 - A Claude Code/Codex/Cursor user can copy the correct stdio configuration.
 - README, package metadata, MCP spec, changelog, and release checklist agree on
-  the candidate version and tool count.
+  the released version and tool count.
+
+## Phase 12: v0.2.2 launch closure [DONE]
+
+- Release commit `0794bcec7b57e1d1e0372ecc2e015bdd4eaf25b8` was pushed to `master`.
+- Immutable annotated tag `v0.2.2` and the GitHub Release were created at that
+  commit; the fixed tarball was uploaded and its downloaded SHA-256/SHA-512
+  matched the local build.
+- GitHub Actions runs `33057318621` (`master`) and `33057337752` (`v0.2.2`)
+  passed on Windows/Ubuntu × Node 22/24, including clean package install and
+  official registry audit.
+- npm publication and repository topics remain separate maintainer decisions.
 
 ### Risks and mitigations
 
