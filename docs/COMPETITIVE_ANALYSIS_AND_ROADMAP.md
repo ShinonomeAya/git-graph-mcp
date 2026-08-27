@@ -37,15 +37,17 @@
 - 72 项测试和 Windows/Ubuntu × Node 22/24 CI；每个矩阵格还执行 clean package
   install 和官方 registry production audit。
 
-当前主要缺口：
+当前基线已完成原计划中的主要能力：
 
-- 只能选一个提交，不能表达提交范围或稳定引用；
-- 提交详情仍浅，缺少可分页搜索、结构化 diff 和文件历史；
-- AI 需要组合 graph、status、selected、compare 等多个调用；
-- MCP 只暴露 tools，没有 selection/status resources 或更新通知；
-- Git 读取以同步子进程为主，尚未建立大仓库性能预算；
-- 当前包版本为 0.2.0；`v0.2.0` tag/Release 已存在但仓库仍为私有，npm 未发布；
-  后续修复若随最新代码公开，应另行准备补丁版本。
+- 支持 commit、range 和 ref 选择；
+- 提供分页搜索、结构化 diff、文件历史和受预算约束的 context bundle；
+- 提供 12 个结构化 MCP tools 与 2 个只读 resources；
+- 已建立 Git 超时、benchmark、clean package install 和 Windows/Ubuntu × Node 22/24 CI 门禁；
+- 当前公开稳定包为 0.2.1；`v0.2.1` tag/Release 已存在，npm 未发布；当前主线的
+  双语 README 和 package allowlist 收口工作准备通过新的 `v0.2.2` 补丁版本发布。
+
+下一阶段缺口主要是可发现性和生态接入：固定包安装入口、MCP 工具文档、跨客户端
+配置示例、社区 Issue 模板，以及在更多操作系统和 MCP 客户端上的人工验收。
 
 ## 3. GitHub 样本
 

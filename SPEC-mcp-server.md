@@ -1,6 +1,6 @@
 # Spec: mcp-server
 
-Status: draft for review
+Status: maintained contract for the v0.2.x implementation
 
 ## Objective
 
@@ -9,7 +9,8 @@ Expose `git-graph-mcp` capabilities to local AI coding tools through a standards
 ## Responsibilities
 
 - Start one local MCP server over official SDK stdio.
-- Register five existing read-only tools and two approved safe-action tools.
+- Register the implemented 12-tool surface, including read-only context tools
+  and two explicitly bounded safe-action tools.
 - Validate every external argument before invoking domain functions.
 - Return structured content plus readable text.
 - Translate expected domain/action errors without leaking implementation detail.
@@ -60,13 +61,18 @@ All result objects include `schemaVersion: 1` and are mirrored in `structuredCon
 
 | Tool | Required input | Primary output | Mutation |
 |---|---|---|---|
-| `git_graph` | none | root, branch, HEAD, graph text, commits | none |
-| `git_status` | none | root, branch, HEAD, structured/compact status | none |
-| `git_selected` | none | normalized selection or `selected: null` | none |
-| `git_inspect_commit` | `commit` | inspected commit and saved selection | selection file only |
-| `git_compare_selected_with_head` | none | relationship and diff summary | none |
-| `git_create_branch_at_selected` | `name` | created/idempotent branch result | creates one new local branch |
-| `git_reset_plan` | `mode` | preview, impacts, warnings, exact command | none |
+| `git_graph` | optional `repo`, `limit`, `timeoutMs` | root, branch, HEAD, graph text, commits | none |
+| `git_status` | optional `repo`, `timeoutMs` | root, branch, HEAD, structured/compact status | none |
+| `git_selected` | optional `repo` | normalized selection or `selected: null` | none |
+| `git_context_bundle` | optional `repo`, bounds, `includePatch` | bounded selection, status, graph, comparison, and warnings | none |
+| `git_search_commits` | optional filters and paging | bounded commit search results and cursor | none |
+| `git_commit_diff` | required `commit`; optional path, parent, bounds, `includePatch` | structured diff metadata and optional bounded patch | none |
+| `git_file_history` | required safe relative `path`; optional ref and paging | bounded file history | none |
+| `git_revalidate_plan` | required `plan`; optional `repo` | current action-plan validity and state fingerprint | none |
+| `git_inspect_commit` | required `commit` | inspected commit and saved selection | selection file only |
+| `git_compare_selected_with_head` | optional `repo` | relationship and diff summary | none |
+| `git_create_branch_at_selected` | required `name`; optional `plan` | created/idempotent branch result | creates one new local branch |
+| `git_reset_plan` | required `mode` | preview, impacts, warnings, exact command | none |
 
 Every tool accepts optional `repo`. `git_graph` additionally accepts optional integer `limit` from 1 to 500. `git_reset_plan.mode` is one of `soft`, `mixed`, or `hard`. Schemas set `additionalProperties: false`.
 
@@ -122,7 +128,7 @@ Unit tests assert exact tool names, descriptions, input constraints, output sche
 
 1. spawn the real bin entrypoint;
 2. complete initialization within a bounded timeout;
-3. list exactly seven tools;
+3. list exactly twelve tools;
 4. call representative read, selection, comparison, branch, and reset-plan flows against a temporary repository;
 5. verify no non-MCP stdout; and
 6. close the client and observe process exit.
@@ -137,7 +143,7 @@ The branch tool uses a disposable repository. The reset-plan test records refs, 
 
 ## Success criteria
 
-- The official SDK client connects and lists seven tools on Windows.
+- The official SDK client connects and lists twelve tools on Windows.
 - Contract tests cover valid and invalid input for every tool.
 - Every result provides `schemaVersion: 1` structured content.
 - Expected errors are stable tool errors, not timeouts or uncaught exceptions.

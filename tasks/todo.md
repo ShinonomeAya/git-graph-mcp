@@ -948,3 +948,40 @@ technical gates pass and the user explicitly confirms the final visibility actio
 ## Checkpoint L: public launch
 
 - [x] T33 visibility change and anonymous post-launch checks pass.
+
+## Phase 11: public page and README remediation
+
+### T34: Reconcile the next patch baseline
+
+- [x] Prepare package/lockfile version `0.2.2` without moving `v0.2.1`.
+- [x] Record the candidate release intent and keep npm publication disabled.
+
+### T35: Make the README executable for new users
+
+- [x] Add release/CI/license/language navigation near the title.
+- [x] Document source checkout and fixed GitHub tarball installation separately.
+- [x] Document runtime/OS limits, TUI controls, MCP client setup, 12 tools, and 2 resources.
+- [x] Add troubleshooting and technical-reference links in Chinese and English.
+
+### T36: Align linked public technical docs
+
+- [x] Update the MCP specification from the stale seven-tool draft to the implemented 12-tool contract.
+- [x] Keep historical release evidence labeled as historical.
+
+### T37: Complete community intake files
+
+- [x] Add `CODE_OF_CONDUCT.md`.
+- [x] Add bug-report and feature-request issue templates plus template config.
+- [ ] Prepare repository topics as a separate GitHub metadata action.
+
+### T38: Verify the candidate before external release
+
+- [x] Run syntax, unit/integration, smoke, package, and clean-install checks.
+- [x] Verify bilingual README packaging and compute the candidate SHA-256.
+- [ ] Hold push, tag, Release asset upload, and topics pending maintainer approval.
+
+## Checkpoint M: public onboarding
+
+- [x] A new user can install from source or a fixed Release asset without guessing.
+- [x] MCP client configuration distinguishes source checkout from installed package.
+- [x] README, package metadata, MCP spec, changelog, and release checklist agree.

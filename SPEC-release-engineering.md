@@ -1,6 +1,6 @@
 # Spec: release-engineering
 
-Status: draft for review
+Status: maintained release-engineering contract for v0.2.x
 
 ## Objective
 
@@ -14,7 +14,8 @@ Make `git-graph-mcp` reproducible to install, verify, diagnose, and package on s
 - Keep npm contents portable and minimal.
 - Provide verified setup for Claude Code and generic stdio MCP clients.
 - Maintain opt-in diagnostics and correct historical troubleshooting documentation.
-- Prepare, but do not publish, the v0.2 release candidate.
+- Keep release preparation reproducible; publication remains a separate
+  maintainer decision.
 
 ## Non-goals
 
@@ -46,7 +47,7 @@ npm pack --dry-run
 - `package.json` and `package-lock.json`: exact dependency and script contract.
 - `.github/workflows/ci.yml`: OS/runtime matrix.
 - `.mcp.json`: portable source-checkout setup using `node` from `PATH`.
-- `README.md`: product, installation, commands, safety.
+- `README.md` and `README.en.md`: product, installation, commands, safety.
 - `docs/CLAUDE_CODE.md`: verified Claude Code setup and troubleshooting.
 - `docs/MCP_DEBUG_LOG.md`: historical evidence with corrected conclusion.
 - `LICENSE`: license text matching `package.json`.
@@ -56,7 +57,7 @@ npm pack --dry-run
 
 `package.json` must declare:
 
-- target version `0.2.0` only when the release candidate is approved;
+- target patch version only when the release candidate is approved;
 - `engines.node` as `>=22`;
 - the executable `bin` mapping;
 - the official MCP SDK dependency;
@@ -68,6 +69,7 @@ The packed artifact may contain:
 - `bin/**`
 - `src/**`
 - `README.md`
+- `README.en.md`
 - `LICENSE`
 - npm-generated `package.json`
 

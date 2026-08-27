@@ -2,6 +2,19 @@
 
 All notable changes to `git-graph-mcp` are documented here.
 
+## 0.2.2 — 2026-08-27
+
+This patch completes the public onboarding and distribution path after the
+immutable `v0.2.1` release.
+
+- Added bilingual installation guidance for source checkouts and fixed GitHub
+  Release tarballs.
+- Documented the installed-package MCP configuration, all 12 tools, both
+  resources, TUI controls, supported runtimes, and troubleshooting path.
+- Added issue intake templates and a Code of Conduct for community feedback.
+- Aligned the public MCP contract documentation with the implemented tool
+  registry and package allowlist.
+
 ## 0.2.1 — 2026-08-26
 
 This patch release hardens the public-release path after the immutable `v0.2.0`

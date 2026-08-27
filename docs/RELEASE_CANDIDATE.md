@@ -1,17 +1,19 @@
 # Release Candidate Readiness
 
-状态：v0.2.1 补丁 Release 已创建，GitHub 仓库已公开；`v0.2.0` tag 和
-Release 保持不变，npm 未发布。公开后的匿名验收已通过。
+状态：`v0.2.2` 已通过本地发布门禁，待本次提交推送后创建正式 tag 和 GitHub
+Release；npm 未发布。
 
 ## 当前基线
 
-- 包版本为 `0.2.1`；
+- 发布包版本为 `0.2.2`，公开稳定包为 `0.2.1`，本次上线后切换为 `0.2.2`；
 - 运行时基线为 Node.js 22+、Git on `PATH`；Node.js 20 仅作迁移检查；
 - MCP 为本地 stdio，当前 12 个工具和 2 个只读 resources；
 - action plan receipt 绑定 repo/head/index/status/ref 指纹，过期或漂移时 fail closed；
 - 默认 Git 读取保持只读，reset 只生成计划，分支创建需要显式调用；
-- 当前维护分支包含 T28–T32 修复；`v0.2.0` 不移动，公开版本为 `v0.2.1`；
-  Release asset `git-graph-mcp-0.2.1.tgz` 已上传并完成 SHA256 校验。
+- `v0.2.0` 和 `v0.2.1` 均保持不可变；当前候选包含 T28–T33 之后的
+  双语 README、固定包安装说明、MCP 工具目录和社区入口补齐；
+- Release asset `git-graph-mcp-0.2.1.tgz` 已上传并完成 SHA256 校验；
+  `v0.2.2` asset 已在本地生成，推送后上传并复核下载摘要。
 
 ## 已验证证据
 
@@ -27,11 +29,16 @@ Release 保持不变，npm 未发布。公开后的匿名验收已通过。
   与调用契约通过；
 - `test/integration/safe-actions.test.js`、`test/unit/actions.test.js`：分支动作在计划
   过期、脏状态、HEAD 或 ref 漂移时拒绝且不改变 refs/index/worktree；
-- GitHub Actions run `32957109919`：Windows/Ubuntu × Node 22/24 的 package install、
+- 历史 GitHub Actions run `32957109919`：Windows/Ubuntu × Node 22/24 的 package install、
   check 和官方 registry audit 全部通过，且 checkout/setup-node 已切换到维护中的
   action runtime。
+- 本地 `v0.2.2` 候选 tarball：`git-graph-mcp-0.2.2.tgz`，SHA-256 为
+  `F9D70A394E847AC6EC9C8CBA90188D7B0F8A829B53A32E6E638B937B47914A11`，
+  SHA-512 为
+  `5F357D86472FAE7636D3E994E0141CA93C695AA8C7030C3287C52D0C98B39A33D6C985704191AC06AC63187E32F5A45793F5E4770A0BED450B5FF9ED1A8062AE`，
+  包含 14 个 allowlist 文件；Release 上传后必须重新核对下载资产摘要。
 
-## 放行清单（分别批准）
+## v0.2.1 历史放行清单
 
 1. [x] 本地实现、测试、打包 allowlist 和安全边界审查；
 2. [x] `SECURITY.md`、`CONTRIBUTING.md`、README 和 capability map 与实现一致；
@@ -40,9 +47,20 @@ Release 保持不变，npm 未发布。公开后的匿名验收已通过。
 5. [x] 用户批准并已执行仓库公开；
 6. [ ] 用户批准 npm publish（当前默认不发布）。
 
+## v0.2.2 放行清单
+
+1. [x] 中英文 README 已补齐源码、固定包、MCP、TUI 和支持范围说明；
+2. [x] MCP specification 已与实现中的 12 个工具和 2 个 resources 对齐；
+3. [x] Code of Conduct、bug report 和 feature request 入口已加入；
+4. [x] 本地语法、测试、smoke、package allowlist 和 clean-install 门禁通过；
+5. [x] 候选 tarball SHA-256 已记录并通过人工复核；
+6. [x] 用户批准推送、创建 `v0.2.2` tag、GitHub Release 和 Release asset；
+7. [ ] 用户另行批准 npm publish（默认不发布）。
+
 ## 回滚与禁止自动执行
 
 公开代码版本 tag 为 `v0.2.1`（commit `0ac0b4d`），CI run 为
-`32957109919`。首小时监控负责人为仓库维护者 `ShinonomeAya`，回滚决策由同一
-维护者执行。若匿名 smoke、Release 下载或安装检查失败，先恢复 GitHub 私有可见性，
-再撤下对应 Release，最后保留失败证据；`v0.2.0` 永不移动。
+`32957109919`。`v0.2.2` 必须使用新的不可变 tag，不得移动已有 tag。
+首小时监控负责人为仓库维护者 `ShinonomeAya`，回滚决策由同一维护者执行。若
+匿名 smoke、Release 下载或安装检查失败，先保留失败证据并撤下对应 Release；
+公开稳定版本回退目标仍为已验证且不可变的 `v0.2.1`。

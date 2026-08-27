@@ -1,6 +1,7 @@
 # Implementation Plan: git-graph-mcp v0.2
 
-Status: draft for human review
+Status: v0.2.2 public-readiness candidate; local gates complete, external
+publication pending maintainer approval
 
 ## Overview
 
@@ -303,6 +304,70 @@ T16 human release gate
 - MCP resource subscriptions are deferred until tool/resource parity is proven.
 - Public repository visibility is optional and must not be inferred from npm or
   release readiness.
+
+## Phase 11: public page and README remediation
+
+The public repository is usable, but the current `master` branch contains
+documentation and package-allowlist changes after the immutable `v0.2.1`
+release. This phase prepares a coherent `v0.2.2` patch candidate without
+moving `v0.2.1` or publishing to npm.
+
+### T34 — Reconcile the next patch baseline [DONE]
+
+- Bump the candidate package and lockfile to `0.2.2`.
+- Record the release intent in `CHANGELOG.md` and `docs/RELEASE_CANDIDATE.md`.
+- Keep `v0.2.1` immutable and state that the candidate Release is not created
+  until local and CI gates pass.
+
+### T35 — Make the README executable for new users [DONE]
+
+- Add stable-release, CI, license, and language navigation near the title.
+- Separate source-checkout installation from GitHub tarball installation.
+- Explain that npm registry publication is not enabled and show the exact
+  `npm install`/`npx --no-install` path for a downloaded Release asset.
+- Add supported runtime/OS boundaries, TUI key controls, MCP client setup, the
+  12-tool catalog, the two resources, and troubleshooting links in both
+  Chinese and English.
+
+### T36 — Align linked public technical docs [DONE]
+
+- Update the MCP specification's tool count and contract table from the stale
+  seven-tool draft to the implemented 12-tool surface.
+- Link the client setup and MCP specification from both READMEs.
+- Keep historical v0.2.0/v0.2.1 evidence labeled as historical rather than
+  silently rewriting it.
+
+### T37 — Complete community intake files [LOCAL DONE]
+
+- Add a concise Code of Conduct and bug/feature issue templates.
+- Add a GitHub issue-template config with security-report guidance.
+- Record repository topics as a separate GitHub metadata action; do not encode
+  them as fake files in the package.
+
+### T38 — Verify the candidate before external release [LOCAL DONE]
+
+- Run syntax, unit/integration, smoke, package, and clean-install checks.
+- Verify the packed allowlist contains the bilingual README and no private
+  configuration.
+- Compute the candidate tarball SHA-256 and record it in the release checklist;
+  only then consider pushing, tagging `v0.2.2`, uploading the tarball, and
+  adding GitHub topics.
+
+### Checkpoint M: public onboarding [LOCAL PASS]
+
+- A new user can choose source checkout or fixed Release asset without guessing.
+- A Claude Code/Codex/Cursor user can copy the correct stdio configuration.
+- README, package metadata, MCP spec, changelog, and release checklist agree on
+  the candidate version and tool count.
+
+### Risks and mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| The stable tag omits newer documentation | High | Keep `v0.2.1` immutable; ship the aligned allowlist and README in `v0.2.2` |
+| A tarball command works only from a source checkout | High | Test the URL/tarball install with a disposable prefix and `npx --no-install` |
+| README tool claims drift from the MCP registry | Medium | Derive the public catalog from `src/mcp.js` and the package integration test |
+| Community metadata is changed without a review trail | Low | Keep topics as a separate maintainer action after the candidate is approved |
 
 ## Phase 10: public-release readiness remediation
 

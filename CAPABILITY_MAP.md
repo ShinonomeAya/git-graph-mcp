@@ -1,6 +1,7 @@
-# Capability Map: git-graph-mcp v0.2.0
+# Capability Map: git-graph-mcp v0.2.x
 
-Status: approved on 2026-08-26
+Status: maintained; public `v0.2.1` is immutable and the `v0.2.2` patch candidate
+contains the documentation and package-allowlist follow-up.
 
 `git-graph-mcp` is split into independently testable capabilities so that a smaller model can implement one bounded module at a time without reinterpreting the whole product.
 
@@ -63,7 +64,8 @@ Detailed order, checkpoints, and risk handling live in [tasks/plan.md](tasks/pla
 
 ## Initiative completion
 
-The release is ready for human visibility review only when every module success criterion passes,
-the checkpoints in `tasks/todo.md` are checked, and the applicable Windows/Ubuntu CI evidence is
-current. Repository visibility, any patch version, tag, release, and npm publication are separate
-explicit actions.
+The public `v0.2.1` release passed the module success criteria and applicable
+Windows/Ubuntu CI gates. A later patch release must still pass the same checks,
+include the current package allowlist and bilingual README, and keep its tag,
+asset, checksum, and documentation aligned. npm publication remains a separate
+explicit action.

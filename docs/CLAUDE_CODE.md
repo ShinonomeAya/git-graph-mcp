@@ -32,11 +32,28 @@ prompted. Run `/mcp` and confirm that `git-graph` is connected.
 
 ## Option B: Installed package
 
-After installing the package globally or using `npx`, add it from the project
-where it should run:
+Install the fixed Release tarball in a dedicated runtime directory or in the
+project where the server should run. The package is not published to the npm
+registry, so use the versioned asset from [GitHub Releases](https://github.com/ShinonomeAya/git-graph-mcp/releases):
 
 ```powershell
-claude mcp add --transport stdio --scope local git-graph -- npx git-graph-mcp mcp
+New-Item -ItemType Directory git-graph-mcp-runtime -Force | Out-Null
+Set-Location git-graph-mcp-runtime
+npm init -y
+$version = "0.2.1"
+npm install "https://github.com/ShinonomeAya/git-graph-mcp/releases/download/v$version/git-graph-mcp-$version.tgz"
+```
+
+Then add the project-local executable:
+
+```powershell
+claude mcp add --transport stdio --scope local git-graph -- npx --no-install git-graph-mcp mcp
+```
+
+If the package is in a separate runtime directory, add its path:
+
+```powershell
+claude mcp add --transport stdio --scope local git-graph -- npx --prefix <path-to-git-graph-mcp-runtime> --no-install git-graph-mcp mcp
 ```
 
 For a source checkout in another project, replace the executable with
@@ -92,8 +109,10 @@ node .\bin\git-graph-mcp.js compare-selected
 npm run check
 ```
 
-For an installed package, use `npx git-graph-mcp mcp` in the MCP client and
-`npx git-graph-mcp graph --plain` for the CLI smoke check.
+For an installed package, use `npx --no-install git-graph-mcp mcp` in the MCP
+client and `npx --no-install git-graph-mcp graph --plain` for the CLI smoke
+check. The `--no-install` flag keeps the client on the package already installed
+in the target project instead of downloading a different version at runtime.
 
 ## Troubleshooting stdio
 

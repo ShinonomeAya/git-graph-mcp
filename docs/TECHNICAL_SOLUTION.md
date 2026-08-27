@@ -1,6 +1,7 @@
 # git-graph-mcp v0.2 Technical Solution
 
-Status: draft for review; product boundaries confirmed on 2026-08-26
+Status: maintained design; public `v0.2.1` is released and the `v0.2.2`
+documentation/package candidate is under review.
 
 ## 1. Objective
 
@@ -342,13 +343,15 @@ No arbitrary coverage percentage gates v0.2. Every branch of safety-critical act
 
 ## 15. Packaging and compatibility
 
-- Use `package.json#files` as an allowlist for `bin/`, `src/`, `README.md`, and the license file.
+- Use `package.json#files` as an allowlist for `bin/`, `src/`, `README.md`,
+  `README.en.md`, and the license file.
 - Exclude `.mcp.json`, local launch scripts, task documents, debug logs, tests, and machine-specific paths from the npm artifact.
 - Keep the executable shebang and verify the installed bin on Windows and Linux.
 - Use `node` from `PATH` in checked-in project configuration; do not commit an absolute Node executable path.
 - CI covers Windows and Ubuntu on Node 22 and Node 24.
-- The immutable `v0.2.0` release is the current baseline; any post-release code fixes
-  require a separately reviewed patch version before publication.
+- The immutable `v0.2.0` and `v0.2.1` releases are historical baselines; any
+  post-release package or documentation changes require a separately reviewed
+  patch version before publication.
 
 ## 16. Boundaries
 

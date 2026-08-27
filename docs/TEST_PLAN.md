@@ -2,7 +2,9 @@
 
 ## 目标
 
-确认 v0.2.0 在 Windows + Node.js 22/24 + Git 环境下具备三类可用性：
+确认 v0.2.x 在 Windows + Node.js 22/24 + Git 环境下具备三类可用性；
+本文件保留 v0.2.0 时代的测试层级记录，公开发布门禁以
+[`docs/RELEASE_CANDIDATE.md`](RELEASE_CANDIDATE.md) 为准：
 
 1. Git 域、选择状态和只读历史结果正确；
 2. CLI/TUI 在真实终端可操作且退出后不残留终端状态；

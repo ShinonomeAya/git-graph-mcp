@@ -1,6 +1,6 @@
 {
   "name": "git-graph-mcp",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Terminal Git graph for AI coding tools, with AI-readable commit selection state.",
   "type": "commonjs",
   "files": [
@@ -11,7 +11,7 @@
     "LICENSE"
   ],
   "bin": {
-    "git-graph-mcp": "./bin/git-graph-mcp.js"
+    "git-graph-mcp": "bin/git-graph-mcp.js"
   },
   "scripts": {
     "start": "node ./bin/git-graph-mcp.js",
@@ -37,5 +37,21 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0"
-  }
+  },
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShinonomeAya/git-graph-mcp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/ShinonomeAya/git-graph-mcp/issues"
+  },
+  "homepage": "https://github.com/ShinonomeAya/git-graph-mcp#readme"
 }
